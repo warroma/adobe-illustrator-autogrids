@@ -1,0 +1,167 @@
+:root {
+    --bg: #323232;
+    --bg-alt: #2b2b2b;
+    --bg-raised: #3f3f3f;
+    --border: #191919;
+    --text: #d6d6d6;
+    --text-dim: #969696;
+    --accent: #4a9eff;
+    --accent-text: #ffffff;
+    --field-bg: #464646;
+}
+
+* { box-sizing: border-box; }
+
+body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--text);
+    font: 11px "Segoe UI", Helvetica, Arial, sans-serif;
+}
+
+.app { padding: 14px; }
+
+/* ---- abas Guias / Pontos ---- */
+.section-tabs {
+    display: flex;
+    margin-bottom: 14px;
+    border-radius: 4px;
+    overflow: hidden;
+    border: 1px solid var(--border);
+}
+.section-tabs button {
+    flex: 1;
+    background: var(--bg-alt);
+    color: var(--text-dim);
+    border: none;
+    padding: 8px 0;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    border-right: 1px solid var(--border);
+}
+.section-tabs button:last-child { border-right: none; }
+.section-tabs button.active { background: var(--accent); color: var(--accent-text); }
+
+/* ---- grade de tipos (cartões com ícone + rótulo) ---- */
+.type-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 8px;
+    margin-bottom: 14px;
+}
+.type-card {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+    background: var(--bg-alt);
+    border: 1px solid var(--border);
+    border-radius: 5px;
+    padding: 10px 4px 8px;
+    cursor: pointer;
+}
+.type-card svg {
+    width: 26px;
+    height: 26px;
+    fill: none;
+    stroke: var(--text-dim);
+    stroke-width: 1.5;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+}
+.type-card svg circle { fill: var(--text-dim); stroke: none; }
+.type-card span {
+    font-size: 10px;
+    color: var(--text-dim);
+}
+.type-card.active {
+    background: rgba(74, 158, 255, 0.16);
+    border-color: var(--accent);
+}
+.type-card.active svg { stroke: var(--accent); }
+.type-card.active svg circle { fill: var(--accent); }
+.type-card.active span { color: var(--text); font-weight: 600; }
+
+/* ---- toggle de unidade ---- */
+.unit-toggle {
+    display: flex;
+    margin-bottom: 16px;
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    overflow: hidden;
+}
+.unit-toggle button {
+    flex: 1;
+    background: var(--bg-alt);
+    color: var(--text-dim);
+    border: none;
+    border-right: 1px solid var(--border);
+    padding: 5px 0;
+    cursor: pointer;
+    font-size: 11px;
+}
+.unit-toggle button:last-child { border-right: none; }
+.unit-toggle button.active { background: var(--accent); color: var(--accent-text); }
+
+/* ---- campos / sliders ---- */
+.field { margin-bottom: 13px; }
+.field label {
+    display: block;
+    margin-bottom: 5px;
+    color: var(--text-dim);
+    font-size: 10.5px;
+    text-transform: uppercase;
+    letter-spacing: .03em;
+}
+.field-row {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+.field-row input[type="range"] { flex: 1; accent-color: var(--accent); }
+.field-row .num {
+    width: 46px;
+    background: var(--field-bg);
+    border: 1px solid var(--border);
+    color: var(--text);
+    text-align: right;
+    padding: 3px 4px;
+    border-radius: 3px;
+    font-size: 11px;
+}
+.unit-label { color: var(--text-dim); width: 16px; font-size: 10px; }
+
+.dot-only { border-top: 1px solid var(--border); padding-top: 12px; margin-top: 2px; }
+
+.disclaimer {
+    background: #4a3b1a;
+    border: 1px solid #8a6d1f;
+    color: #e8c766;
+    padding: 8px;
+    border-radius: 4px;
+    margin-bottom: 14px;
+    line-height: 1.45;
+    font-size: 10.5px;
+}
+
+#clearBtn {
+    width: 100%;
+    padding: 8px;
+    background: var(--bg-raised);
+    border: 1px solid var(--border);
+    color: var(--text);
+    border-radius: 4px;
+    cursor: pointer;
+    margin-top: 2px;
+    font-size: 11px;
+}
+#clearBtn:hover { background: #474747; }
+
+#status {
+    margin-top: 10px;
+    color: var(--text-dim);
+    min-height: 14px;
+    font-size: 10.5px;
+}
+#status.error { color: #ff7a7a; }

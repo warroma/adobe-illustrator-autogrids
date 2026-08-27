@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>AutoGrids</title>
+    <link rel="stylesheet" href="./css/style.css">
+</head>
+<body>
+    <div class="app">
+        <div class="section-tabs" id="sectionTabs">
+            <button class="section-tab active" data-section="guias">Guias</button>
+            <button class="section-tab" data-section="pontos">Pontos</button>
+        </div>
+
+        <div class="type-grid" id="typeGrid-guias">
+            <button class="type-card active" data-type="rectangle">
+                <svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" fill="none"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="3" y1="15" x2="21" y2="15"/><line x1="9" y1="3" x2="9" y2="21"/><line x1="15" y1="3" x2="15" y2="21"/></svg>
+                <span>Retangular</span>
+            </button>
+            <button class="type-card" data-type="triangle">
+                <svg viewBox="0 0 24 24"><polygon points="12,3 21,19 3,19" fill="none"/><line x1="12" y1="3" x2="12" y2="19"/><line x1="7.5" y1="11" x2="16.5" y2="11"/></svg>
+                <span>Isométrica</span>
+            </button>
+            <button class="type-card" data-type="lines">
+                <svg viewBox="0 0 24 24"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+                <span>Linhas</span>
+            </button>
+            <button class="type-card" data-type="hexagon">
+                <svg viewBox="0 0 24 24"><polygon points="12,2 20,7 20,17 12,22 4,17 4,7" fill="none"/></svg>
+                <span>Hexagonal</span>
+            </button>
+        </div>
+
+        <div class="type-grid" id="typeGrid-pontos" style="display:none;">
+            <button class="type-card" data-type="four-dots">
+                <svg viewBox="0 0 24 24"><circle cx="7" cy="7" r="2.2"/><circle cx="17" cy="7" r="2.2"/><circle cx="7" cy="17" r="2.2"/><circle cx="17" cy="17" r="2.2"/></svg>
+                <span>Quadrado</span>
+            </button>
+            <button class="type-card" data-type="three-dots">
+                <svg viewBox="0 0 24 24"><circle cx="12" cy="4.5" r="2.2"/><circle cx="4.5" cy="17" r="2.2"/><circle cx="19.5" cy="17" r="2.2"/></svg>
+                <span>Triangular</span>
+            </button>
+        </div>
+
+        <div class="unit-toggle" id="unitToggle">
+            <button data-unit="mm" class="active">mm</button>
+            <button data-unit="in">in</button>
+            <button data-unit="pt">pt</button>
+        </div>
+
+        <div class="field">
+            <label>Tamanho da célula</label>
+            <div class="field-row">
+                <input type="range" id="cellSize" min="5" max="300" step="1" value="40">
+                <input type="text" id="cellSizeVal" class="num">
+                <span class="unit-label" id="unitLabel1">mm</span>
+            </div>
+        </div>
+
+        <div class="field">
+            <label>Margem</label>
+            <div class="field-row">
+                <input type="range" id="margin" min="0" max="200" step="1" value="0">
+                <input type="text" id="marginVal" class="num">
+                <span class="unit-label" id="unitLabel2">mm</span>
+            </div>
+        </div>
+
+        <div id="dotFields" class="dot-only">
+            <div class="field">
+                <label>Tamanho do ponto</label>
+                <div class="field-row">
+                    <input type="range" id="dotSize" min="1" max="40" step="0.5" value="4">
+                    <input type="text" id="dotSizeVal" class="num">
+                    <span class="unit-label" id="unitLabel3">mm</span>
+                </div>
+            </div>
+            <div class="field">
+                <label>Intensidade</label>
+                <div class="field-row">
+                    <input type="range" id="intensity" min="0" max="100" step="1" value="60">
+                    <span class="num" id="intensityVal">60%</span>
+                </div>
+            </div>
+            <div class="disclaimer">
+                Pontos são objetos reais (não guias) para manter o preenchimento visível, então <strong>imprimem e exportam normalmente</strong>. Ao sair da aba Pontos sem finalizar, eles são removidos automaticamente para não ficar sobrepostos às guias.
+            </div>
+        </div>
+
+        <button id="clearBtn">Limpar tudo</button>
+        <div id="status"></div>
+    </div>
+
+    <script src="./js/CSInterface.js"></script>
+    <script src="./js/main.js"></script>
+</body>
+</html>

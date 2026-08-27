@@ -133,9 +133,11 @@
             alert("Abra um documento no Illustrator antes de rodar o AutoGrids.");
             return;
         }
-        var doc = app.activeDocument;
-
-        var win = new Window("palette", "AutoGrids", undefined);
+        // "dialog" (modal), não "palette": nesta instalação do Illustrator, uma paleta
+        // modeless com #targetengine reabre sem erro, mas doc.artboards/doc.layers etc.
+        // lançam "there is no document" dentro do onClick (mesmo obtendo o doc na hora).
+        // Um diálogo modal roda tudo na mesma execução síncrona do script e não sofre disso.
+        var win = new Window("dialog", "AutoGrids", undefined);
         win.orientation = "column";
         win.alignChildren = "fill";
 
@@ -182,16 +184,21 @@
         var clearBtn = btnGroup.add("button", undefined, "Limpar grade");
         var closeBtn = btnGroup.add("button", undefined, "Fechar");
 
-        function currentBounds() {
+        function currentBounds(doc) {
             var raw = getActiveArtboardBounds(doc);
             var margin = parseFloat(marginInput.text);
             if (isNaN(margin) || margin < 0) margin = 0;
             return insetBounds(raw, margin);
         }
 
-        applyBtn.onClick = function () {
+        function doApply() {
             try {
-                var b = currentBounds();
+                if (app.documents.length === 0) {
+                    alert("Abra um documento no Illustrator antes de aplicar a grade.");
+                    return;
+                }
+                var doc = app.documents[0];
+                var b = currentBounds(doc);
                 if (!boundsValid(b)) {
                     alert("A margem informada é maior que a prancheta ativa.");
                     return;
@@ -221,18 +228,22 @@
             } catch (err) {
                 alert("Erro ao gerar a grade: " + err.message);
             }
-        };
+        }
 
-        clearBtn.onClick = function () {
+        function doClear() {
             try {
-                var layer = doc.layers.getByName(GUIDE_LAYER_NAME);
+                if (app.documents.length === 0) return;
+                var layer = app.documents[0].layers.getByName(GUIDE_LAYER_NAME);
                 layer.locked = false;
                 clearLayer(layer);
                 app.redraw();
             } catch (e) {
                 // ainda não existe camada de guias — nada a limpar
             }
-        };
+        }
+
+        applyBtn.onClick = doApply;
+        clearBtn.onClick = doClear;
 
         closeBtn.onClick = function () {
             win.close();

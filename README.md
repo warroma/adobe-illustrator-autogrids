@@ -1,54 +1,77 @@
 # AutoGrids
 
-Script para Adobe Illustrator que gera **guias de grade** (retangular e isométrica, por enquanto) automaticamente dentro dos limites da prancheta ativa, com um painel para ajustar colunas/linhas, tamanho da célula e margem — e regenerar quantas vezes quiser.
+Painel para o Adobe Illustrator que gera grades de referência direto na prancheta ativa, com pré-visualização em tempo real: retangular, isométrica, linhas (pautado), hexagonal, pontos quadrados e pontos triangulares.
 
-## Por que um script ExtendScript, e não um "plugin" no sentido moderno?
-
-Pesquisei a documentação e o estado atual da extensibilidade do Illustrator (2026) antes de começar:
-
-- **UXP**, a plataforma moderna de plugins da Adobe (a que já roda no Photoshop, InDesign e XD), **ainda não está aberta para desenvolvedores terceiros no Illustrator** — está restrita a um programa interno/NDA da Adobe. Não é algo que dê pra instalar com uma conta Creative Cloud normal.
-- **CEP** (a plataforma anterior, baseada em HTML/CSS/JS + Node) ainda funciona no Illustrator atual, mas está descontinuada pela Adobe e exige bem mais infraestrutura (Node.js, certificados de assinatura, empacotamento em `.zxp`) para um ganho de UI que não é essencial neste projeto.
-- O **SDK nativo em C++** serve para plugins profundos (ferramentas novas, efeitos ao vivo, formatos de arquivo customizados) — build por plataforma, assinatura de plugin, ciclo de compilação. Não se aplica aqui.
-- **ExtendScript (`.jsx`)** é a via oficialmente suportada e madura para automação no Illustrator: acesso completo ao modelo de objetos (documentos, pranchetas, guias, camadas), interface própria via `ScriptUI`, e **não exige SDK, build nem conta de desenvolvedor** — só o Illustrator (que você já tem) e um editor de texto.
-
-Ou seja: sua intuição de que "seria uma série de scripts" estava certa, e é a via correta — não um workaround.
-
-## Requisitos
-
-- Adobe Illustrator (qualquer versão recente o suficiente para suportar `ScriptUI`, o que cobre praticamente tudo desde CS).
-- Nada além disso. Opcional: [VS Code](https://code.visualstudio.com/) com a extensão gratuita **ExtendScript Debugger** da Adobe, só para ter autocomplete e depuração melhores — não é obrigatório.
+Duas formas de usar: um **painel ancorável** (recomendado, com preview ao vivo) ou um **script simples** sem instalação de extensão (mais limitado, só retangular/isométrica).
 
 ## Instalação
 
-**Opção rápida (sem copiar nada):** no Illustrator, `Arquivo > Scripts > Outro Script...` e selecione `scripts/AutoGrids.jsx`.
+### Opção 1 — Painel ancorável (recomendado)
 
-**Opção fixa (aparece direto no menu Scripts):** copie `scripts/AutoGrids.jsx` para a pasta de Scripts do Illustrator e reinicie o app (essa pasta só é lida na abertura):
+O painel usa a tecnologia CEP da Adobe. Como não é assinado digitalmente, o Illustrator precisa ser configurado uma única vez para aceitar extensões de desenvolvimento.
 
-- macOS: `/Applications/Adobe Illustrator [versão]/Presets/[idioma]/Scripts/`
-- Windows: `C:\Program Files\Adobe\Adobe Illustrator [versão]\Presets\[idioma]\Scripts\`
+**1. Copie a pasta da extensão**
+
+Copie a pasta [`com.autogrids.panel`](com.autogrids.panel) inteira para a pasta de extensões do CEP:
+
+- **Windows:** `%APPDATA%\Adobe\CEP\extensions\`
+- **macOS:** `~/Library/Application Support/Adobe/CEP/extensions/`
+
+**2. Habilite o modo de desenvolvimento do CEP** (uma vez só)
+
+No Windows, abra o PowerShell e cole:
+
+```powershell
+'7','8','9','10','11','12' | ForEach-Object {
+    $p = "HKCU:\Software\Adobe\CSXS.$_"
+    if (-not (Test-Path $p)) { New-Item -Path $p -Force | Out-Null }
+    New-ItemProperty -Path $p -Name PlayerDebugMode -Value "1" -PropertyType String -Force | Out-Null
+}
+```
+
+No macOS, abra o Terminal e cole (repita trocando o número da versão se precisar):
+
+```bash
+defaults write com.adobe.CSXS.9 PlayerDebugMode 1
+defaults write com.adobe.CSXS.10 PlayerDebugMode 1
+defaults write com.adobe.CSXS.11 PlayerDebugMode 1
+defaults write com.adobe.CSXS.12 PlayerDebugMode 1
+```
+
+**3. Reinicie o Illustrator** (feche completamente e abra de novo — não basta fechar e reabrir só o painel)
+
+**4. Abra o painel**
+
+No Illustrator: **Janela > Extensões > AutoGrids**. Arraste a aba do painel para a doca lateral (perto de Camadas, por exemplo) se quiser deixá-lo fixo ali.
+
+### Opção 2 — Script simples (sem instalação de extensão)
+
+Se preferir não mexer em configurações do sistema:
+
+1. Baixe o arquivo [`AutoGrids.jsx`](AutoGrids.jsx)
+2. No Illustrator: **Arquivo > Scripts > Outro Script...** e selecione o arquivo
+   - Ou copie o arquivo para a pasta de scripts do Illustrator (`Presets/<idioma>/Scripts`) para ele aparecer direto no menu **Arquivo > Scripts**
+3. Essa versão abre como uma janela flutuante (não ancora na doca) e só tem grade retangular e isométrica
 
 ## Como usar
 
-1. Abra um documento e deixe a prancheta desejada como ativa (a grade sempre usa a prancheta ativa no momento de clicar em Aplicar).
-2. Rode o script.
-3. Escolha o tipo de grade, ajuste os parâmetros e clique em **Aplicar**.
-4. Mude os valores e clique em **Aplicar** de novo à vontade — a grade anterior é substituída automaticamente, então é assim que você "redimensiona" a grade. **Limpar grade** remove tudo. **Fechar** fecha o painel.
+1. Com um documento aberto no Illustrator, abra o painel AutoGrids
+2. Escolha a aba **Guias** (retangular, isométrica, linhas, hexagonal) ou **Pontos** (quadrado, triangular)
+3. Clique no tipo de grade desejado — a prévia atualiza em tempo real na prancheta ativa, sem precisar clicar em nenhum botão de aplicar
+4. Ajuste o tamanho da célula e a margem pelos controles deslizantes; troque a unidade (mm/pol/pt) como preferir
+5. Na aba Pontos, ajuste também o tamanho do ponto e a intensidade (tom de cinza)
+6. **Limpar tudo** remove a grade inteira do documento
 
-As guias ficam numa camada dedicada chamada `AutoGrids Guides`, travada para não atrapalhar sua arte.
+### Por que Guias e Pontos funcionam diferente
 
-## Tipos de grade (v1)
+- **Guias** (retangular, isométrica, linhas, hexagonal) viram guias de verdade do Illustrator: não imprimem, não exportam, ficam numa camada travada chamada "AutoGrids Guides".
+- **Pontos** (quadrado, triangular) viram objetos reais (círculos preenchidos) numa camada chamada "AutoGrids Pontos" — uma guia não tem preenchimento, então um ponto marcado como guia ficaria praticamente invisível (só um contorno fino). Por isso eles **imprimem e exportam normalmente**: remova ou oculte essa camada antes de entregar o arquivo final. Ao trocar de volta para a aba Guias, os pontos são removidos automaticamente, para não ficar uma grade esquecida sobreposta à outra.
 
-- **Retangular**: número de colunas e linhas dentro da área útil da prancheta (prancheta menos a margem).
-- **Isométrica**: três famílias de guias — verticais, +30° e −30° — com o mesmo espaçamento perpendicular entre si, formando losangos isométricos consistentes. O parâmetro "tamanho da célula" é esse espaçamento.
+## Limitação conhecida
 
-## Limitações conhecidas / próximos passos
+Nesta versão do Illustrator (2026), os objetos criados na aba Pontos às vezes não aparecem imediatamente na tela — um bug de atualização de tela do próprio Illustrator ao criar arte por extensões CEP (as guias não têm esse problema). Os pontos são criados corretamente mesmo assim (confira no painel de Camadas: a camada "AutoGrids Pontos" mostra a quantidade de objetos). Se não aparecerem, redimensionar a janela do Illustrator (arrastar uma borda) costuma forçar a atualização da tela.
 
-- Os campos numéricos estão em **pontos (pt)**, o valor interno do Illustrator — ainda não converte automaticamente para mm/px/in seguindo a régua do documento.
-- A matemática da grade (incluindo o recorte das diagonais isométricas contra os limites da prancheta) foi validada com testes numéricos isolados fora do Illustrator, mas o script **ainda não foi testado dentro do Illustrator de verdade** — este ambiente de desenvolvimento não tem o Illustrator instalado para rodar. Teste no seu Illustrator e me avise se algo não funcionar como esperado (a mensagem de erro exata, se aparecer, ajuda a corrigir rápido).
-- Roadmap possível, em ordem de prioridade sugerida: gutter separado de margem, grade triangular/hexagonal, grade de linha de base (baseline), conversão de unidades pela régua do documento, lembrar os últimos valores usados entre execuções, e — se um dia a Adobe abrir UXP para Illustrator — migrar para um painel dockado mais bonito no lugar do `ScriptUI`.
+## Requisitos
 
-## Referências
-
-- [Adobe Illustrator Scripting Guide (docsforadobe)](https://ai-scripting.docsforadobe.dev/)
-- [UXP for Illustrator: Status & What to Use Today (Mapsoft)](https://mapsoft.com/posts/illustrator-uxp-status.html)
-- [Install and run scripts in Illustrator (Adobe)](https://helpx.adobe.com/illustrator/using/automation-scripts.html)
+- Adobe Illustrator 2023 ou mais recente (desenvolvido e testado no Illustrator 2026, Windows)
+- Windows ou macOS
