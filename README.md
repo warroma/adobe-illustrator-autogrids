@@ -17,6 +17,16 @@ Copie a pasta [`com.autogrids.panel`](com.autogrids.panel) inteira para a pasta 
 - **Windows:** `%APPDATA%\Adobe\CEP\extensions\`
 - **macOS:** `~/Library/Application Support/Adobe/CEP/extensions/`
 
+Se as pastas `CEP` ou `extensions` ainda não existirem no seu Mac, pode criá-las normalmente — são só pastas comuns, o Illustrator não precisa que elas já existam antes.
+
+> **No Mac, duas pegadinhas específicas dessa etapa:**
+>
+> - **A pasta `Library` fica oculta no Finder.** Duas formas de chegar nela: no Finder, pressione `Cmd+Shift+G` e cole o caminho `~/Library/Application Support/Adobe/CEP/extensions/`; ou, com o Finder em foco, segure `Option` e clique no menu **Ir** — "Library" aparece na lista.
+> - **Se você baixou o repositório como `.zip` pelo navegador** (em vez de `git clone`), rode isto no Terminal *depois* de colocar a pasta no destino final, antes de abrir o Illustrator. O macOS marca arquivos baixados da internet com um atributo de "quarentena" que pode fazer a extensão não aparecer no menu ou o painel abrir em branco:
+>   ```bash
+>   xattr -cr ~/Library/Application\ Support/Adobe/CEP/extensions/com.autogrids.panel
+>   ```
+
 **2. Habilite o modo de desenvolvimento do CEP** (uma vez só)
 
 No Windows, abra o PowerShell e cole:
