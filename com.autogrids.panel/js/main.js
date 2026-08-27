@@ -44,6 +44,7 @@ var els = {
     intensity: document.getElementById("intensity"),
     intensityVal: document.getElementById("intensityVal"),
     unitLabels: [document.getElementById("unitLabel1"), document.getElementById("unitLabel2"), document.getElementById("unitLabel3")],
+    applyBtn: document.getElementById("applyBtn"),
     clearBtn: document.getElementById("clearBtn"),
     status: document.getElementById("status")
 };
@@ -70,12 +71,10 @@ function setStatus(msg, isError) {
     els.status.className = isError ? "error" : "";
 }
 
-var debounceTimer = null;
-function requestApply() {
-    clearTimeout(debounceTimer);
-    debounceTimer = setTimeout(doApply, 90);
-}
-
+// Nada aqui desenha sozinho — os controles só ajustam o estado local. Só o
+// botão "Aplicar" escreve na prancheta (evita aplicar sem querer numa
+// prancheta diferente da que você estava ajustando, e evita reaplicar em
+// cada tick de slider).
 function doApply() {
     var call = "AutoGrids_apply(" +
         '"' + state.type + '",' +
@@ -89,7 +88,7 @@ function doApply() {
         if (result && result.indexOf("ERRO") === 0) {
             setStatus(result, true);
         } else {
-            setStatus("Grade atualizada.", false);
+            setStatus("Aplicado na prancheta ativa.", false);
         }
     });
 }
@@ -106,7 +105,6 @@ function selectType(btn) {
     btn.classList.add("active");
     state.type = btn.getAttribute("data-type");
     syncReadouts();
-    requestApply();
 }
 
 els.typeGridGuias.addEventListener("click", function (e) {
@@ -140,11 +138,10 @@ els.sectionTabs.addEventListener("click", function (e) {
     syncReadouts();
 
     if (leavingPontos) {
-        // Saiu de Pontos sem "terminar aplicando" — não deixa os objetos
-        // reais esquecidos sobrepostos à grade de guias que vai aparecer.
+        // Saiu de Pontos sem clicar em Aplicar — não deixa um preview de
+        // objetos reais esquecido sobreposto às guias da prancheta ativa.
         clearDotsOnly();
     }
-    requestApply();
 });
 
 // ----- toggle de unidade -----
@@ -157,49 +154,47 @@ els.unitToggle.addEventListener("click", function (e) {
     syncReadouts();
 });
 
-// ----- sliders -----
+// ----- sliders (só atualizam o estado / mostrador — não desenham) -----
 
 els.cellSize.addEventListener("input", function () {
     state.cellSizePt = parseFloat(els.cellSize.value);
     els.cellSizeVal.value = fmt(ptToUnit(state.cellSizePt, state.unit));
-    requestApply();
 });
 els.cellSizeVal.addEventListener("change", function () {
     var v = parseFloat(els.cellSizeVal.value.replace(",", "."));
-    if (!isNaN(v)) { state.cellSizePt = unitToPt(v, state.unit); syncReadouts(); requestApply(); }
+    if (!isNaN(v)) { state.cellSizePt = unitToPt(v, state.unit); syncReadouts(); }
 });
 
 els.margin.addEventListener("input", function () {
     state.marginPt = parseFloat(els.margin.value);
     els.marginVal.value = fmt(ptToUnit(state.marginPt, state.unit));
-    requestApply();
 });
 els.marginVal.addEventListener("change", function () {
     var v = parseFloat(els.marginVal.value.replace(",", "."));
-    if (!isNaN(v)) { state.marginPt = unitToPt(v, state.unit); syncReadouts(); requestApply(); }
+    if (!isNaN(v)) { state.marginPt = unitToPt(v, state.unit); syncReadouts(); }
 });
 
 els.dotSize.addEventListener("input", function () {
     state.dotSizePt = parseFloat(els.dotSize.value);
     els.dotSizeVal.value = fmt(ptToUnit(state.dotSizePt, state.unit));
-    requestApply();
 });
 els.dotSizeVal.addEventListener("change", function () {
     var v = parseFloat(els.dotSizeVal.value.replace(",", "."));
-    if (!isNaN(v)) { state.dotSizePt = unitToPt(v, state.unit); syncReadouts(); requestApply(); }
+    if (!isNaN(v)) { state.dotSizePt = unitToPt(v, state.unit); syncReadouts(); }
 });
 
 els.intensity.addEventListener("input", function () {
     state.intensity = parseInt(els.intensity.value, 10);
     els.intensityVal.textContent = state.intensity + "%";
-    requestApply();
 });
 
-// ----- limpar tudo -----
+// ----- aplicar / limpar -----
+
+els.applyBtn.addEventListener("click", doApply);
 
 els.clearBtn.addEventListener("click", function () {
     csInterface.evalScript("AutoGrids_clear()", function (result) {
-        setStatus(result === "OK" ? "Grade removida." : result, result !== "OK");
+        setStatus(result === "OK" ? "Prancheta ativa limpa." : result, result !== "OK");
     });
 });
 
@@ -208,9 +203,7 @@ els.clearBtn.addEventListener("click", function () {
 syncReadouts();
 csInterface.evalScript("AutoGrids_getState()", function (result) {
     var parts = (result || "0|0|0").split("|");
-    if (parts[0] === "1") {
-        doApply();
-    } else {
+    if (parts[0] !== "1") {
         setStatus("Abra um documento no Illustrator para começar.", false);
     }
 });
