@@ -1,8 +1,8 @@
 # AutoGrids
 
-Painel para o Adobe Illustrator que gera grades de referência direto na prancheta ativa, com pré-visualização em tempo real: retangular, isométrica, linhas (pautado), hexagonal, pontos quadrados e pontos triangulares.
+Painel para o Adobe Illustrator que gera grades de referência direto na prancheta ativa: retangular, isométrica, linhas (pautado), hexagonal, pontos quadrados e pontos triangulares. Cada prancheta guarda sua própria grade de forma independente — aplicar numa não mexe nas outras.
 
-Duas formas de usar: um **painel ancorável** (recomendado, com preview ao vivo) ou um **script simples** sem instalação de extensão (mais limitado, só retangular/isométrica).
+Duas formas de usar: um **painel ancorável** (recomendado) ou um **script simples** sem instalação de extensão (mais limitado, só retangular/isométrica).
 
 ## Instalação
 
@@ -55,17 +55,18 @@ Se preferir não mexer em configurações do sistema:
 
 ## Como usar
 
-1. Com um documento aberto no Illustrator, abra o painel AutoGrids
-2. Escolha a aba **Guias** (retangular, isométrica, linhas, hexagonal) ou **Pontos** (quadrado, triangular)
-3. Clique no tipo de grade desejado — a prévia atualiza em tempo real na prancheta ativa, sem precisar clicar em nenhum botão de aplicar
-4. Ajuste o tamanho da célula e a margem pelos controles deslizantes; troque a unidade (mm/pol/pt) como preferir
-5. Na aba Pontos, ajuste também o tamanho do ponto e a intensidade (tom de cinza)
-6. **Limpar tudo** remove a grade inteira do documento
+1. Com um documento aberto no Illustrator, deixe ativa a prancheta onde quer a grade e abra o painel AutoGrids
+2. Escolha a aba **Guias** (retangular, isométrica, linhas, hexagonal) ou **Pontos** (quadrado, triangular) e o tipo desejado
+3. Ajuste o tamanho da célula e a margem pelos controles deslizantes; troque a unidade (mm/pol/pt) como preferir; na aba Pontos, ajuste também o tamanho do ponto e a intensidade (tom de cinza)
+4. Clique em **Aplicar na prancheta ativa** para desenhar a grade — nada é desenhado antes disso
+5. **Limpar prancheta** remove a grade só da prancheta que está ativa no momento
+
+Cada prancheta é independente: aplicar uma grade nela não mexe nas grades já aplicadas nas outras. Para trocar de prancheta, clique nela normalmente no Illustrator antes de clicar em Aplicar.
 
 ### Por que Guias e Pontos funcionam diferente
 
 - **Guias** (retangular, isométrica, linhas, hexagonal) viram guias de verdade do Illustrator: não imprimem, não exportam, ficam numa camada travada chamada "AutoGrids Guides".
-- **Pontos** (quadrado, triangular) viram objetos reais (círculos preenchidos) numa camada chamada "AutoGrids Pontos" — uma guia não tem preenchimento, então um ponto marcado como guia ficaria praticamente invisível (só um contorno fino). Por isso eles **imprimem e exportam normalmente**: remova ou oculte essa camada antes de entregar o arquivo final. Ao trocar de volta para a aba Guias, os pontos são removidos automaticamente, para não ficar uma grade esquecida sobreposta à outra.
+- **Pontos** (quadrado, triangular) viram objetos reais (círculos preenchidos) numa camada chamada "AutoGrids Pontos" — uma guia não tem preenchimento, então um ponto marcado como guia ficaria praticamente invisível (só um contorno fino). Por isso eles **imprimem e exportam normalmente**: remova ou oculte essa camada antes de entregar o arquivo final. Ao trocar de volta para a aba Guias sem clicar em Aplicar, qualquer pré-visualização de pontos da prancheta ativa é removida automaticamente, para não ficar esquecida sobreposta às guias.
 
 ## Limitação conhecida
 
