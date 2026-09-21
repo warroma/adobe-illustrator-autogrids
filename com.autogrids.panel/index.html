@@ -10,7 +10,6 @@
         <div class="section-tabs" id="sectionTabs">
             <button class="section-tab active" data-section="guias">Guias</button>
             <button class="section-tab" data-section="pontos">Pontos</button>
-            <button class="section-tab" data-section="liquido">Líquido</button>
         </div>
 
         <div class="type-grid" id="typeGrid-guias">
@@ -49,7 +48,7 @@
             <button data-unit="pt">pt</button>
         </div>
 
-        <div class="field" id="cellSizeField">
+        <div class="field">
             <label>Tamanho da célula</label>
             <div class="field-row">
                 <input type="range" id="cellSize" min="5" max="300" step="1" value="40">
@@ -58,7 +57,7 @@
             </div>
         </div>
 
-        <div class="field" id="marginField">
+        <div class="field">
             <label>Margem</label>
             <div class="field-row">
                 <input type="range" id="margin" min="0" max="200" step="1" value="0">
@@ -85,23 +84,6 @@
             </div>
             <div class="disclaimer">
                 Pontos são objetos reais (não guias) para manter o preenchimento visível, então <strong>imprimem e exportam normalmente</strong>. Ao sair da aba Pontos sem finalizar, eles são removidos automaticamente para não ficar sobrepostos às guias.
-            </div>
-        </div>
-
-        <div id="liquidFields" class="liquid-only" style="display:none;">
-            <div class="liquid-status" id="liquidStatus">Selecione 2 formas (círculo, elipse ou retângulo) no artboard e clique em "Capturar seleção".</div>
-            <button id="captureBtn">Capturar seleção</button>
-
-            <div class="field" style="margin-top:13px;">
-                <label>Pregnância</label>
-                <div class="field-row">
-                    <input type="range" id="liquidStrength" min="0" max="100" step="1" value="50">
-                    <span class="num" id="liquidStrengthVal">50%</span>
-                </div>
-            </div>
-
-            <div class="disclaimer">
-                A ponte usa a posição e a cor de preenchimento das formas no momento da captura — se mover as formas depois, capture de novo. Funciona melhor com círculos, elipses e retângulos bem arredondados; cantos vivos ou pouco arredondados podem deixar uma pequena folga na emenda.
             </div>
         </div>
 

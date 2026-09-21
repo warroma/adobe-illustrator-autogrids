@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>AutoLiquid</title>
+    <link rel="stylesheet" href="./css/style.css">
+</head>
+<body>
+    <div class="app">
+        <div class="liquid-status" id="liquidStatus">Selecione 2 formas (círculo, elipse ou retângulo) no artboard e clique em "Capturar seleção".</div>
+        <button id="captureBtn">Capturar seleção</button>
+
+        <div class="field" style="margin-top:13px;">
+            <label>Pregnância</label>
+            <div class="field-row">
+                <input type="range" id="liquidStrength" min="0" max="100" step="1" value="50">
+                <span class="num" id="liquidStrengthVal">50%</span>
+            </div>
+        </div>
+
+        <div class="disclaimer">
+            A ponte usa a posição e a cor de preenchimento das formas no momento da captura — se mover as formas depois, capture de novo. Funciona melhor com círculos, elipses e retângulos bem arredondados; cantos vivos ou pouco arredondados podem deixar uma pequena folga na emenda.
+        </div>
+
+        <button id="clearBtn">Limpar conexões líquidas</button>
+    </div>
+
+    <script src="./js/CSInterface.js"></script>
+    <script src="./js/main.js"></script>
+</body>
+</html>
