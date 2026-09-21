@@ -133,33 +133,6 @@ body {
 .unit-label { color: var(--text-dim); width: 16px; font-size: 10px; }
 
 .dot-only { border-top: 1px solid var(--border); padding-top: 12px; margin-top: 2px; }
-.liquid-only { border-top: 1px solid var(--border); padding-top: 12px; margin-top: 2px; }
-
-.liquid-status {
-    background: var(--bg-alt);
-    border: 1px solid var(--border);
-    color: var(--text-dim);
-    padding: 8px;
-    border-radius: 4px;
-    margin-bottom: 10px;
-    line-height: 1.4;
-    font-size: 10.5px;
-}
-.liquid-status.ok { color: var(--text); border-color: var(--accent); }
-.liquid-status.error { color: #ff7a7a; border-color: #ff7a7a; }
-
-#captureBtn {
-    width: 100%;
-    padding: 9px;
-    border-radius: 4px;
-    cursor: pointer;
-    font-size: 11.5px;
-    font-weight: 600;
-    background: var(--accent);
-    border: 1px solid var(--accent);
-    color: var(--accent-text);
-}
-#captureBtn:hover { opacity: 0.9; }
 
 .disclaimer {
     background: #4a3b1a;
