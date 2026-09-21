@@ -26,7 +26,10 @@ var state = {
     cellSizePt: unitToPt(20, "mm"),
     marginPt: 0,
     dotSizePt: unitToPt(1.5, "mm"),
-    intensity: 60
+    intensity: 60,
+    liquidStrength: 50,
+    liquidTag: null,
+    liquidShapes: null
 };
 
 var els = {
@@ -44,6 +47,13 @@ var els = {
     intensity: document.getElementById("intensity"),
     intensityVal: document.getElementById("intensityVal"),
     unitLabels: [document.getElementById("unitLabel1"), document.getElementById("unitLabel2"), document.getElementById("unitLabel3")],
+    cellSizeField: document.getElementById("cellSizeField"),
+    marginField: document.getElementById("marginField"),
+    liquidFields: document.getElementById("liquidFields"),
+    liquidStatus: document.getElementById("liquidStatus"),
+    captureBtn: document.getElementById("captureBtn"),
+    liquidStrength: document.getElementById("liquidStrength"),
+    liquidStrengthVal: document.getElementById("liquidStrengthVal"),
     clearBtn: document.getElementById("clearBtn"),
     status: document.getElementById("status")
 };
@@ -58,11 +68,32 @@ function syncReadouts() {
     els.intensity.value = state.intensity;
     els.intensityVal.textContent = state.intensity + "%";
     els.unitLabels.forEach(function (el) { el.textContent = state.unit; });
+    els.liquidStrength.value = state.liquidStrength;
+    els.liquidStrengthVal.textContent = state.liquidStrength + "%";
 
     var isPontos = state.section === "pontos";
+    var isLiquido = state.section === "liquido";
+
     els.dotFields.style.display = isPontos ? "block" : "none";
-    els.typeGridGuias.style.display = isPontos ? "none" : "grid";
+    els.liquidFields.style.display = isLiquido ? "block" : "none";
+    els.typeGridGuias.style.display = (!isPontos && !isLiquido) ? "grid" : "none";
     els.typeGridPontos.style.display = isPontos ? "grid" : "none";
+    els.unitToggle.style.display = isLiquido ? "none" : "flex";
+    els.cellSizeField.style.display = isLiquido ? "none" : "block";
+    els.marginField.style.display = isLiquido ? "none" : "block";
+    els.clearBtn.textContent = isLiquido ? "Limpar conexões líquidas" : "Limpar prancheta";
+}
+
+function updateLiquidStatus(msg, kind) {
+    if (msg) {
+        els.liquidStatus.textContent = msg;
+    } else if (state.liquidShapes) {
+        els.liquidStatus.textContent = "Conexão capturada — ajuste a pregnância ou capture outro par.";
+        kind = "ok";
+    } else {
+        els.liquidStatus.textContent = "Selecione 2 formas (círculo, elipse ou retângulo) no artboard e clique em \"Capturar seleção\".";
+    }
+    els.liquidStatus.className = "liquid-status" + (kind ? " " + kind : "");
 }
 
 function setStatus(msg, isError) {
@@ -136,6 +167,14 @@ els.sectionTabs.addEventListener("click", function (e) {
     Array.prototype.forEach.call(els.sectionTabs.children, function (b) { b.classList.remove("active"); });
     e.target.classList.add("active");
 
+    if (next === "liquido") {
+        // Aba Líquido não mexe em grade/pontos: só troca o que está visível.
+        syncReadouts();
+        if (leavingPontos) clearDotsOnly();
+        updateLiquidStatus();
+        return;
+    }
+
     // O tipo ativo dentro da aba de destino é o que já estava marcado nela.
     var destGrid = next === "pontos" ? els.typeGridPontos : els.typeGridGuias;
     var activeCard = destGrid.querySelector(".type-card.active") || destGrid.querySelector(".type-card");
@@ -200,9 +239,76 @@ els.intensity.addEventListener("input", function () {
     requestApply();
 });
 
+// ----- Líquido -----
+//
+// Diferente de Guias/Pontos (que reagem à prancheta ativa), a ponte líquida
+// depende de QUAIS formas o usuário selecionou. "Capturar seleção" lê a
+// seleção atual uma vez e guarda a geometria em state.liquidShapes; a partir
+// daí o slider só recalcula a ponte em cima desses números guardados (não
+// fica relendo a seleção a cada tique). Cada captura gera uma tag nova
+// (state.liquidTag), então capturar um novo par cria uma ponte independente
+// — as anteriores continuam no documento, editáveis normalmente.
+
+var liquidDebounceTimer = null;
+function requestLiquidApply() {
+    clearTimeout(liquidDebounceTimer);
+    liquidDebounceTimer = setTimeout(doLiquidApply, 90);
+}
+
+function doLiquidApply() {
+    if (!state.liquidShapes || !state.liquidTag) return;
+    var s = state.liquidShapes;
+    var call = "AutoLiquid_apply(" +
+        '"' + state.liquidTag + '",' +
+        s.s1.cx + "," + s.s1.cy + "," + s.s1.hw + "," + s.s1.hh + "," +
+        s.s2.cx + "," + s.s2.cy + "," + s.s2.hw + "," + s.s2.hh + "," +
+        state.liquidStrength + "," +
+        s.fill.r + "," + s.fill.g + "," + s.fill.b +
+        ")";
+    csInterface.evalScript(call, function (result) {
+        if (result && result.indexOf("ERRO") === 0) {
+            updateLiquidStatus(result, "error");
+        } else {
+            updateLiquidStatus();
+        }
+    });
+}
+
+els.captureBtn.addEventListener("click", function () {
+    csInterface.evalScript("AutoLiquid_captureSelection()", function (result) {
+        if (!result || result.indexOf("ERRO") === 0) {
+            updateLiquidStatus(result || "ERRO: falha desconhecida.", "error");
+            return;
+        }
+        var parts = result.split("|");
+        state.liquidShapes = {
+            s1: { cx: parseFloat(parts[1]), cy: parseFloat(parts[2]), hw: parseFloat(parts[3]), hh: parseFloat(parts[4]) },
+            s2: { cx: parseFloat(parts[5]), cy: parseFloat(parts[6]), hw: parseFloat(parts[7]), hh: parseFloat(parts[8]) },
+            fill: { r: parseFloat(parts[9]), g: parseFloat(parts[10]), b: parseFloat(parts[11]) }
+        };
+        state.liquidTag = "liquid-" + Date.now();
+        doLiquidApply();
+    });
+});
+
+els.liquidStrength.addEventListener("input", function () {
+    state.liquidStrength = parseInt(els.liquidStrength.value, 10);
+    els.liquidStrengthVal.textContent = state.liquidStrength + "%";
+    requestLiquidApply();
+});
+
 // ----- limpar -----
 
 els.clearBtn.addEventListener("click", function () {
+    if (state.section === "liquido") {
+        csInterface.evalScript("AutoLiquid_clearAll()", function (result) {
+            setStatus(result === "OK" ? "Conexões líquidas removidas." : result, result !== "OK");
+        });
+        state.liquidTag = null;
+        state.liquidShapes = null;
+        updateLiquidStatus();
+        return;
+    }
     csInterface.evalScript("AutoGrids_clear()", function (result) {
         setStatus(result === "OK" ? "Prancheta ativa limpa." : result, result !== "OK");
     });
