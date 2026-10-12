@@ -39,7 +39,9 @@ npm install
 npm run dist
 ```
 
-Gera o `.dmg` (Mac) ou o instalador `.exe` (Windows, NSIS) em `installer/dist/`. **Rode este comando na própria plataforma de destino** — o `electron-builder` empacota Mac no Mac e Windows no Windows (ou numa CI configurada para isso); não foi testado aqui se cross-compilar de Linux funciona para este projeto.
+Gera em `installer/dist/` o `AutoGrids-Instalador-Windows.exe` — um executável único, sem etapa de instalação própria: abre direto a janela com o botão de instalar — ou o `AutoGrids-Instalador-macOS.dmg` (universal, Intel e Apple Silicon). **Rode na própria plataforma de destino**: o `electron-builder` só gera `.dmg` no macOS.
+
+Para publicar, não é preciso gerar nada à mão: empurrar uma tag `vX.Y.Z` dispara o workflow [`release.yml`](../.github/workflows/release.yml), que gera os dois arquivos em máquinas Windows e macOS do GitHub, roda os testes e publica a release com as notas de `docs/release-notes/vX.Y.Z.md`.
 
 ## Avisos de segurança esperados (sem assinatura)
 

@@ -94,8 +94,28 @@ function installPanel(panelSourceDir, platform, env, log, fsImpl) {
     return { dest: dest, linked: false, previousVersion: installed.version };
 }
 
+// macOS: o que vem de um download (o .dmg do instalador) carrega o atributo de
+// "quarentena", e ele pode passar para os arquivos copiados — com ele, o CEP
+// pode não listar o painel ou abri-lo em branco. É o mesmo `xattr -cr` que o
+// README manda rodar na instalação manual. Nas outras plataformas não faz nada.
+// runner é injetável só para teste.
+function clearQuarantine(dest, platform, log, runner) {
+    platform = platform || process.platform;
+    if (platform !== "darwin") return true;
+    runner = runner || execFileSync;
+    try {
+        runner("xattr", ["-cr", dest]);
+        if (log) log("Quarentena do macOS removida de " + dest);
+        return true;
+    } catch (err) {
+        if (log) log("Aviso: não deu para remover a quarentena do macOS (" + err.message + ")");
+        return false;
+    }
+}
+
 module.exports = {
     CSXS_VERSIONS: CSXS_VERSIONS,
     enableDebugMode: enableDebugMode,
-    installPanel: installPanel
+    installPanel: installPanel,
+    clearQuarantine: clearQuarantine
 };

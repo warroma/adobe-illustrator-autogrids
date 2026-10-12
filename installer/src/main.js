@@ -66,6 +66,7 @@ ipcMain.handle("run-install", function () {
     var pushLog = function (line) { log.push(line); };
     try {
         var placed = install.installPanel(panelSourceDir(), process.platform, process.env, pushLog);
+        if (!placed.linked) install.clearQuarantine(placed.dest, process.platform, pushLog);
         var debugResults = install.enableDebugMode(process.platform, pushLog);
         var anyDebugFailed = debugResults.some(function (r) { return !r.ok; });
         return {

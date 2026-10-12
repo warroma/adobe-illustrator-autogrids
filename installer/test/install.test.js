@@ -54,6 +54,18 @@ testEnableDebugMode("win32", "reg");
     console.log("enableDebugMode(linux/unsupported): OK, fails gracefully per entry");
 })();
 
+// ---- clearQuarantine: runs `xattr -cr <dest>` only on macOS, never throws ----
+(function () {
+    var calls = [];
+    var runner = function (cmd, args) { calls.push([cmd].concat(args).join(" ")); };
+    assert.strictEqual(install.clearQuarantine("/x/com.autogrids.panel", "darwin", null, runner), true);
+    assert.deepStrictEqual(calls, ["xattr -cr /x/com.autogrids.panel"]);
+    assert.strictEqual(install.clearQuarantine("C:\\x", "win32", null, runner), true);
+    assert.strictEqual(calls.length, 1, "must not run anything outside macOS");
+    assert.strictEqual(install.clearQuarantine("/x", "darwin", null, function () { throw new Error("sem xattr"); }), false);
+    console.log("clearQuarantine: OK (macOS runs xattr -cr, other platforms no-op, failure reported not thrown)");
+})();
+
 // ---- installPanel: real folders in a temp dir (fresh install, update, dev link, failed swap) ----
 var fs = require("fs");
 var os = require("os");

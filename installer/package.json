@@ -7,7 +7,7 @@
   "scripts": {
     "start": "electron .",
     "test": "node test/detect.test.js && node test/install.test.js",
-    "dist": "electron-builder"
+    "dist": "electron-builder --publish never"
   },
   "devDependencies": {
     "electron": "44.7.0",
@@ -16,6 +16,7 @@
   "build": {
     "appId": "com.autogrids.installer",
     "productName": "AutoGrids Installer",
+    "icon": "build/icon.png",
     "files": [
       "src/**/*"
     ],
@@ -23,15 +24,13 @@
       { "from": "../com.autogrids.panel", "to": "com.autogrids.panel" }
     ],
     "mac": {
-      "target": "dmg",
-      "category": "public.app-category.graphics-design"
+      "target": [{ "target": "dmg", "arch": ["universal"] }],
+      "category": "public.app-category.graphics-design",
+      "artifactName": "AutoGrids-Instalador-macOS.${ext}"
     },
     "win": {
-      "target": "nsis"
-    },
-    "nsis": {
-      "oneClick": false,
-      "allowToChangeInstallationDirectory": false
+      "target": "portable",
+      "artifactName": "AutoGrids-Instalador-Windows.${ext}"
     }
   }
 }

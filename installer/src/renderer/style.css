@@ -69,6 +69,43 @@ h1 {
 .done > strong { color: #9fd89f; font-size: 14px; }
 .done .restart { color: #e8c766; }
 
+.lead {
+    margin: 0 0 14px;
+    color: #d6d6d6;
+    line-height: 1.5;
+}
+
+h2 {
+    font-size: 13px;
+    margin: 22px 0 8px;
+    color: #969696;
+    text-transform: uppercase;
+    letter-spacing: .03em;
+}
+
+details {
+    border: 1px solid #191919;
+    border-radius: 4px;
+    background: #323232;
+    margin: 0 0 8px;
+    padding: 0 12px;
+    font-size: 12px;
+    line-height: 1.5;
+}
+details summary {
+    cursor: pointer;
+    padding: 9px 0;
+    color: #d6d6d6;
+    font-weight: 600;
+}
+details[open] summary { border-bottom: 1px solid #191919; margin-bottom: 8px; }
+details p, details ol { margin: 0 0 10px; color: #b4b4b4; }
+details ol { padding-left: 18px; }
+details li { margin-bottom: 6px; }
+details code { font-size: 11px; color: #d6d6d6; word-break: break-all; }
+
+#log:empty { display: none; }
+
 .hint {
     font-size: 11.5px;
     color: #969696;
