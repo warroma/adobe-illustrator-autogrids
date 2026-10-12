@@ -2,7 +2,7 @@
 
 Painel para o Adobe Illustrator que cria grades de referência na prancheta ativa — quadriculado, isométrico, pautado, hexagonal e pontilhado — ajustando ao vivo enquanto você arrasta os controles. Cada prancheta tem a sua própria grade.
 
-> **Versão 1.1.0 — em validação.** Esta versão é para testar o uso no dia a dia; a interface do painel e do instalador vai ser redesenhada em breve. Encontrou algo estranho? Abra uma [issue](https://github.com/warroma/adobe-illustrator-autogrids/issues).
+> **Versão 1.1.1 — em validação.** Esta versão é para testar o uso no dia a dia; a interface do painel e do instalador vai ser redesenhada em breve. Encontrou algo estranho? Abra uma [issue](https://github.com/warroma/adobe-illustrator-autogrids/issues).
 
 ![Três pranchetas com grades diferentes: quadriculado com gutter, pontilhado e colmeia hexagonal](docs/img/visao-geral.png)
 
