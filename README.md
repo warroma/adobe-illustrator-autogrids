@@ -63,6 +63,10 @@ Se preferir não mexer em configurações do sistema:
    - Ou copie o arquivo para a pasta de scripts do Illustrator (`Presets/<idioma>/Scripts`) para ele aparecer direto no menu **Arquivo > Scripts**
 3. Essa versão abre como uma janela flutuante (não ancora na doca) e só tem grade retangular e isométrica
 
+### Opção 3 — Instalador com interface (em construção, ainda não testado em Mac/Windows reais)
+
+Existe um instalador com janela própria em [`installer/`](installer) que faz os passos da Opção 1 automaticamente (copiar a pasta certa, habilitar o modo de depuração do CEP). Ele foi escrito e validado com testes automatizados da sua própria lógica, mas **ainda não foi aberto numa máquina Mac ou Windows de verdade** — o ambiente onde foi construído não tem Illustrator nem interface gráfica para isso. Veja [`installer/README.md`](installer/README.md) para construir e testar. Não é assinado digitalmente (decisão consciente, para não ter custo), então o Gatekeeper/SmartScreen vão mostrar avisos — o README do instalador explica como seguir adiante neles.
+
 ## Como usar
 
 1. Com um documento aberto no Illustrator, deixe ativa a prancheta onde quer a grade e abra o painel AutoGrids

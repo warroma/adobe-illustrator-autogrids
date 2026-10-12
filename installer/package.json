@@ -1,0 +1,37 @@
+{
+  "name": "autogrids-installer",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Instalador do painel AutoGrids para Adobe Illustrator (Windows/macOS)",
+  "main": "src/main.js",
+  "scripts": {
+    "start": "electron .",
+    "test": "node test/detect.test.js && node test/install.test.js",
+    "dist": "electron-builder"
+  },
+  "devDependencies": {
+    "electron": "44.7.0",
+    "electron-builder": "26.15.3"
+  },
+  "build": {
+    "appId": "com.autogrids.installer",
+    "productName": "AutoGrids Installer",
+    "files": [
+      "src/**/*"
+    ],
+    "extraResources": [
+      { "from": "../com.autogrids.panel", "to": "com.autogrids.panel" }
+    ],
+    "mac": {
+      "target": "dmg",
+      "category": "public.app-category.graphics-design"
+    },
+    "win": {
+      "target": "nsis"
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": false
+    }
+  }
+}
