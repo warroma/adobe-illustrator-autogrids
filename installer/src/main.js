@@ -39,22 +39,47 @@ app.on("window-all-closed", function () {
     app.quit();
 });
 
+function installedPanelDir() {
+    return path.join(detect.cepExtensionsDir(process.platform, process.env), path.basename(panelSourceDir()));
+}
+
+// Tudo que a tela de verificação precisa para escolher o cenário: instalar,
+// atualizar, reinstalar, voltar versão ou modo desenvolvimento (ver
+// detect.planInstall), além de avisar se o Illustrator está aberto.
 ipcMain.handle("detect-illustrator", function () {
+    var result = { ok: true, installs: [], running: null, installed: null, bundledVersion: null, mode: "install" };
     try {
-        return { ok: true, installs: detect.findIllustratorInstalls(process.platform) };
+        result.installs = detect.findIllustratorInstalls(process.platform);
+        result.running = detect.isIllustratorRunning(process.platform);
+        result.bundledVersion = detect.readPanelVersion(panelSourceDir());
+        result.installed = detect.inspectInstalled(installedPanelDir());
+        result.mode = detect.planInstall(result.installed, result.bundledVersion);
     } catch (err) {
-        return { ok: false, installs: [], error: err.message };
+        result.ok = false;
+        result.error = err.message;
     }
+    return result;
 });
 
 ipcMain.handle("run-install", function () {
     var log = [];
     var pushLog = function (line) { log.push(line); };
     try {
-        var dest = install.installPanel(panelSourceDir(), process.platform, process.env, pushLog);
+        var placed = install.installPanel(panelSourceDir(), process.platform, process.env, pushLog);
         var debugResults = install.enableDebugMode(process.platform, pushLog);
         var anyDebugFailed = debugResults.some(function (r) { return !r.ok; });
-        return { ok: true, dest: dest, debugPartial: anyDebugFailed, log: log };
+        return {
+            ok: true,
+            dest: placed.dest,
+            linked: placed.linked,
+            previousVersion: placed.previousVersion,
+            version: detect.readPanelVersion(panelSourceDir()),
+            // Conferido de novo no fim: o aviso final muda se o Illustrator
+            // ainda estiver aberto (ele só carrega a versão nova ao reabrir).
+            running: detect.isIllustratorRunning(process.platform),
+            debugPartial: anyDebugFailed,
+            log: log
+        };
     } catch (err) {
         return { ok: false, error: err.message, log: log };
     }

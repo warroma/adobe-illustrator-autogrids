@@ -54,31 +54,94 @@ testEnableDebugMode("win32", "reg");
     console.log("enableDebugMode(linux/unsupported): OK, fails gracefully per entry");
 })();
 
-// ---- installPanel: computes the right destination and calls cpSync with the right args ----
-(function () {
-    var calls = { mkdirSync: [], cpSync: [] };
-    var fakeFs = {
-        mkdirSync: function (p, opts) { calls.mkdirSync.push({ p: p, opts: opts }); },
-        cpSync: function (src, dest, opts) { calls.cpSync.push({ src: src, dest: dest, opts: opts }); }
-    };
-    var logLines = [];
-    var source = "/repo/com.autogrids.panel";
-    var dest = install.installPanel(source, "darwin", { HOME: "/Users/test" }, function (l) { logLines.push(l); }, fakeFs);
+// ---- installPanel: real folders in a temp dir (fresh install, update, dev link, failed swap) ----
+var fs = require("fs");
+var os = require("os");
+var detect = require("../src/detect");
+var TMP = fs.mkdtempSync(path.join(os.tmpdir(), "autogrids-install-"));
+function writePanel(dir, version, extraFile) {
+    fs.mkdirSync(path.join(dir, "CSXS"), { recursive: true });
+    fs.writeFileSync(path.join(dir, "CSXS", "manifest.xml"),
+        '<ExtensionManifest ExtensionBundleId="com.autogrids.panel" ExtensionBundleVersion="' + version + '"></ExtensionManifest>');
+    if (extraFile) fs.writeFileSync(path.join(dir, extraFile), extraFile);
+    return dir;
+}
+function leftovers(dest) {
+    return [dest + ".novo", dest + ".antigo"].filter(function (p) { return fs.existsSync(p); });
+}
 
-    var expectedDestRoot = path.join("/Users/test", "Library", "Application Support", "Adobe", "CEP", "extensions");
-    var expectedDest = path.join(expectedDestRoot, "com.autogrids.panel");
+try {
+    var source = writePanel(path.join(TMP, "bundle", "com.autogrids.panel"), "1.1.0", "novo.txt");
 
-    assert.strictEqual(dest, expectedDest);
-    assert.strictEqual(calls.mkdirSync.length, 1);
-    assert.strictEqual(calls.mkdirSync[0].p, expectedDestRoot);
-    assert.strictEqual(calls.mkdirSync[0].opts.recursive, true);
-    assert.strictEqual(calls.cpSync.length, 1);
-    assert.strictEqual(calls.cpSync[0].src, source);
-    assert.strictEqual(calls.cpSync[0].dest, expectedDest);
-    assert.strictEqual(calls.cpSync[0].opts.recursive, true);
-    assert.strictEqual(calls.cpSync[0].opts.force, true);
-    assert.strictEqual(logLines.length, 1);
-    console.log("installPanel: OK — computes", expectedDest, "and calls mkdirSync+cpSync correctly");
-})();
+    // fresh install
+    (function () {
+        var env = { APPDATA: path.join(TMP, "fresh") };
+        var logLines = [];
+        var r = install.installPanel(source, "win32", env, function (l) { logLines.push(l); });
+        var expected = path.join(env.APPDATA, "Adobe", "CEP", "extensions", "com.autogrids.panel");
+        assert.strictEqual(r.dest, expected);
+        assert.strictEqual(r.linked, false);
+        assert.strictEqual(r.previousVersion, null);
+        assert.strictEqual(detect.readPanelVersion(r.dest), "1.1.0");
+        assert.ok(fs.existsSync(path.join(r.dest, "novo.txt")));
+        assert.deepStrictEqual(leftovers(r.dest), [], "no staging/backup folders left behind");
+        assert.ok(logLines.length >= 2);
+        console.log("installPanel (fresh install): OK —", r.dest);
+    })();
+
+    // update: replaces the whole folder, so files the new version dropped do not linger
+    (function () {
+        var env = { APPDATA: path.join(TMP, "update") };
+        var dest = path.join(env.APPDATA, "Adobe", "CEP", "extensions", "com.autogrids.panel");
+        writePanel(dest, "1.0.0", "velho.txt");
+        var r = install.installPanel(source, "win32", env, null);
+        assert.strictEqual(r.previousVersion, "1.0.0");
+        assert.strictEqual(detect.readPanelVersion(dest), "1.1.0");
+        assert.ok(!fs.existsSync(path.join(dest, "velho.txt")), "stale file from the old version must be gone");
+        assert.ok(fs.existsSync(path.join(dest, "novo.txt")));
+        assert.deepStrictEqual(leftovers(dest), []);
+        console.log("installPanel (update 1.0.0 -> 1.1.0): OK, stale files removed");
+    })();
+
+    // dev link: the destination is a junction/symlink to the source code — must not be touched
+    (function () {
+        var env = { APPDATA: path.join(TMP, "linked") };
+        var extDir = path.join(env.APPDATA, "Adobe", "CEP", "extensions");
+        fs.mkdirSync(extDir, { recursive: true });
+        var devSource = writePanel(path.join(TMP, "repo", "com.autogrids.panel"), "1.0.0", "fonte.txt");
+        var dest = path.join(extDir, "com.autogrids.panel");
+        fs.symlinkSync(devSource, dest, "junction");
+        var r = install.installPanel(source, "win32", env, null);
+        assert.strictEqual(r.linked, true);
+        assert.ok(fs.lstatSync(dest).isSymbolicLink(), "the link itself must still be there");
+        assert.strictEqual(detect.readPanelVersion(devSource), "1.0.0", "source code must not be overwritten");
+        assert.ok(fs.existsSync(path.join(devSource, "fonte.txt")), "source files must not be deleted");
+        assert.ok(!fs.existsSync(path.join(devSource, "novo.txt")), "nothing may be copied into the source");
+        console.log("installPanel (dev link): OK, source folder untouched");
+    })();
+
+    // failed swap (e.g. a file held open): the previous version comes back
+    (function () {
+        var env = { APPDATA: path.join(TMP, "failed") };
+        var dest = path.join(env.APPDATA, "Adobe", "CEP", "extensions", "com.autogrids.panel");
+        writePanel(dest, "1.0.0", "velho.txt");
+        var flakyFs = Object.create(fs);
+        flakyFs.renameSync = function (from, to) {
+            if (from === dest + ".novo" && to === dest) {
+                var e = new Error("EBUSY: resource busy or locked, rename");
+                e.code = "EBUSY";
+                throw e;
+            }
+            return fs.renameSync(from, to);
+        };
+        assert.throws(function () { install.installPanel(source, "win32", env, null, flakyFs); }, /EBUSY/);
+        assert.strictEqual(detect.readPanelVersion(dest), "1.0.0", "old version must be restored");
+        assert.ok(fs.existsSync(path.join(dest, "velho.txt")));
+        assert.deepStrictEqual(leftovers(dest), [], "no staging/backup folders left behind");
+        console.log("installPanel (failed swap): OK, previous version restored");
+    })();
+} finally {
+    fs.rmSync(TMP, { recursive: true, force: true });
+}
 
 console.log("ALL install.js CHECKS PASSED");

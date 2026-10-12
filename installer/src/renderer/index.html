@@ -10,13 +10,27 @@
     <p id="intro">Procurando o Illustrator nesta máquina...</p>
     <ul id="found"></ul>
 
+    <p id="plan" class="plan"></p>
+    <p id="runningWarn" class="callout warn" hidden>
+        O Illustrator está aberto. Dá para instalar agora, mas ele só carrega o painel
+        novo depois de ser fechado por completo e aberto de novo.
+    </p>
+
     <button id="installBtn" disabled>Instalar painel AutoGrids</button>
+
+    <div id="done" class="callout done" hidden>
+        <strong id="doneTitle">Pronto!</strong>
+        <p id="doneRestart" class="restart">
+            Para o painel funcionar corretamente, <strong>feche o Illustrator por completo
+            (Arquivo &gt; Sair) e abra de novo</strong>.
+        </p>
+        <p>Depois, abra em <strong>Janela &gt; Extensões &gt; AutoGrids</strong>.</p>
+    </div>
 
     <p id="hint" class="hint">
         Isso copia o painel para a pasta de extensões do CEP e habilita o
         "modo de desenvolvimento" do Illustrator (necessário porque o painel
-        não é assinado digitalmente). Depois de instalar, reinicie o
-        Illustrator por completo e abra em <strong>Janela &gt; Extensões &gt; AutoGrids</strong>.
+        não é assinado digitalmente).
     </p>
 
     <pre id="log"></pre>

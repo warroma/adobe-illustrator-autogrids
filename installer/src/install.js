@@ -6,6 +6,7 @@ var fs = require("fs");
 var path = require("path");
 var execFileSync = require("child_process").execFileSync;
 var cepExtensionsDir = require("./detect").cepExtensionsDir;
+var inspectInstalled = require("./detect").inspectInstalled;
 
 // Mesmo intervalo de versões do CSXS que o README já documenta para o passo manual.
 var CSXS_VERSIONS = ["7", "8", "9", "10", "11", "12"];
@@ -36,16 +37,61 @@ function enableDebugMode(platform, log, runner) {
     return results;
 }
 
-// Copia a pasta da extensão (com.autogrids.panel) para a pasta de extensões
-// do CEP do usuário. fsImpl é injetável só para teste.
+// Coloca a pasta da extensão (com.autogrids.panel) na pasta de extensões do
+// CEP do usuário — serve tanto para instalar quanto para atualizar.
+//
+// Atualização = troca da pasta inteira, não cópia por cima: copiar por cima
+// deixaria para trás arquivos que a versão nova não tem mais. A versão nova é
+// montada ao lado ("<pasta>.novo") e só depois troca de lugar com a antiga; se
+// a troca falhar no meio (arquivo preso pelo Illustrator aberto, por exemplo),
+// a antiga volta para o lugar.
+//
+// Se o destino é um atalho (symlink/junction para o código-fonte — modo
+// desenvolvimento), NÃO mexe em nada: apagar ou copiar "dentro" dele
+// alteraria os arquivos-fonte.
+//
+// fsImpl é injetável só para teste.
 function installPanel(panelSourceDir, platform, env, log, fsImpl) {
     fsImpl = fsImpl || fs;
     var destRoot = cepExtensionsDir(platform, env);
     fsImpl.mkdirSync(destRoot, { recursive: true });
     var dest = path.join(destRoot, path.basename(panelSourceDir));
-    if (log) log("Copiando " + panelSourceDir + " -> " + dest);
-    fsImpl.cpSync(panelSourceDir, dest, { recursive: true, force: true });
-    return dest;
+    var installed = inspectInstalled(dest, fsImpl);
+
+    if (installed.isLink) {
+        if (log) log("A pasta do painel é um atalho para " + (installed.linkTarget || "outro lugar") + " (modo desenvolvimento) — nada copiado.");
+        return { dest: dest, linked: true, previousVersion: installed.version };
+    }
+
+    var staging = dest + ".novo";
+    var backup = dest + ".antigo";
+    fsImpl.rmSync(staging, { recursive: true, force: true });
+    fsImpl.rmSync(backup, { recursive: true, force: true });
+
+    if (log) log("Copiando " + panelSourceDir + " -> " + staging);
+    fsImpl.cpSync(panelSourceDir, staging, { recursive: true });
+
+    if (installed.exists) {
+        if (log) log("Substituindo a versão instalada (" + (installed.version || "versão desconhecida") + ")");
+        try {
+            fsImpl.renameSync(dest, backup);
+        } catch (errMove) {
+            fsImpl.rmSync(staging, { recursive: true, force: true });
+            throw errMove;
+        }
+        try {
+            fsImpl.renameSync(staging, dest);
+        } catch (errSwap) {
+            fsImpl.renameSync(backup, dest);
+            fsImpl.rmSync(staging, { recursive: true, force: true });
+            throw errSwap;
+        }
+        fsImpl.rmSync(backup, { recursive: true, force: true });
+    } else {
+        fsImpl.renameSync(staging, dest);
+    }
+    if (log) log("Painel em " + dest);
+    return { dest: dest, linked: false, previousVersion: installed.version };
 }
 
 module.exports = {

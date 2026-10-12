@@ -9,6 +9,7 @@ Este ambiente de desenvolvimento é Linux, sem Illustrator e sem servidor de dis
 - `npm install` resolve corretamente (Electron 44.7.0 + electron-builder 26.15.3).
 - Sintaxe de todos os arquivos.
 - A lógica "pura" (detecção do Illustrator, cálculo dos caminhos de destino, montagem dos comandos que habilitam o modo de depuração) tem testes próprios em `test/`, com comandos reais do sistema (`defaults`/`reg`) e o sistema de arquivos substituídos por versões falsas — então eles verificam a lógica sem precisar de um Mac/Windows de verdade. Rode `npm test` para conferir.
+- Atualização: os cenários (instalar, atualizar, reinstalar, voltar versão, pasta ligada ao código-fonte, troca que falha no meio) são testados com pastas reais criadas no temporário do sistema, e a detecção foi conferida num Windows 11 real com o Illustrator 2026 instalado fora de Program Files. A janela em si foi conferida no navegador com respostas simuladas — o Electron ainda não foi aberto de verdade.
 
 O que **não** foi testado e só um Mac/Windows reais confirmam: se o Electron abre a janela normalmente, se os caminhos de detecção (`/Applications`, `%ProgramFiles%\Adobe`) batem com uma instalação real do Illustrator, se `defaults`/`reg.exe` têm permissão para escrever sem elevar privilégios, e se o `.dmg`/instalador `.exe` gerado pelo `electron-builder` realmente abre nessas máquinas.
 
@@ -47,11 +48,27 @@ Gera o `.dmg` (Mac) ou o instalador `.exe` (Windows, NSIS) em `installer/dist/`.
 
 ## O que o instalador faz, exatamente
 
-1. Procura pastas com "Adobe Illustrator" no nome em `/Applications` (Mac) ou `Adobe` dentro de `Program Files`/`Program Files (x86)` (Windows) — só para mostrar o que encontrou, não bloqueia a instalação se não achar nada.
-2. Copia a pasta `com.autogrids.panel` (a mesma da raiz do repositório, empacotada dentro do instalador) para:
+1. Procura o Illustrator: pastas com "Adobe Illustrator" no nome em `/Applications` (Mac) ou `Adobe` dentro de `Program Files`/`Program Files (x86)` (Windows) e, no Windows, também o registro de programas instalados — o Creative Cloud deixa instalar em outra unidade (ex.: `D:\Programas\Adobe\...`), que a varredura de pastas não acha. É só para mostrar o que encontrou; não bloqueia a instalação.
+2. Confere o que já está instalado e escolhe o cenário (versão = `ExtensionBundleVersion` do `CSXS/manifest.xml`):
+
+   | Situação | O que a tela oferece |
+   |---|---|
+   | Nada instalado | **Instalar** |
+   | Versão instalada mais antiga | **Atualizar** (mostra "1.0.0 → 1.1.0") |
+   | Mesma versão | **Reinstalar** |
+   | Versão instalada mais nova | **Voltar para a versão X** (pede confirmação) |
+   | A pasta instalada é um atalho (symlink/junction) para o código-fonte | **Modo desenvolvimento**: não copia nada, só confere o modo de depuração |
+
+   Também verifica se o Illustrator está aberto (`tasklist` / `pgrep`) e avisa antes de instalar.
+3. Coloca a pasta `com.autogrids.panel` (a mesma da raiz do repositório, empacotada dentro do instalador) em:
    - Mac: `~/Library/Application Support/Adobe/CEP/extensions/`
    - Windows: `%APPDATA%\Adobe\CEP\extensions\`
-3. Habilita `PlayerDebugMode` para `CSXS.7` até `CSXS.12` (via `defaults write` no Mac, `reg add` no Windows) — o mesmo intervalo de versões do passo manual no README principal.
+
+   Numa atualização a pasta inteira é trocada, não copiada por cima — assim não sobram arquivos que a versão nova não tem mais. A versão nova é montada ao lado (`com.autogrids.panel.novo`) e só então troca de lugar com a antiga; se a troca falhar (ex.: arquivo preso pelo Illustrator aberto), a versão anterior volta para o lugar.
+4. Habilita `PlayerDebugMode` para `CSXS.7` até `CSXS.12` (via `defaults write` no Mac, `reg add` no Windows) — o mesmo intervalo de versões do passo manual no README principal.
+5. No fim, **sempre** pede para fechar o Illustrator por completo e abrir de novo — ele só carrega uma extensão CEP nova ou atualizada ao abrir. Se o Illustrator ainda estiver aberto nesse momento, o aviso fica mais direto ("até lá ele continua usando a versão anterior").
+
+As telas de cada cenário (e o fluxo completo) estão desenhadas no arquivo de design do projeto, página "Instalador" — a interface atual é provisória e vai seguir esse redesenho.
 
 Não instala o script standalone `AutoGrids.jsx` — ele já é "zero-config" por design (só `Arquivo > Scripts > Outro Script...`), então automatizar isso teria risco (teria que descobrir a pasta de Scripts certa, que varia por idioma do Illustrator) sem ganho real.
 
