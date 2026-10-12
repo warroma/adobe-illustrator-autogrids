@@ -69,8 +69,9 @@ Se preferir não mexer em configurações do sistema:
 2. Escolha a aba **Guias** (retangular, isométrica, linhas, hexagonal) ou **Pontos** (quadrado, triangular) e o tipo desejado — a prévia atualiza em tempo real na prancheta ativa a cada mudança, sem precisar clicar em nenhum botão
 3. Ajuste o tamanho da célula e a margem pelos controles deslizantes; troque a unidade (mm/pol/pt) como preferir; na aba Pontos, ajuste também o tamanho do ponto e a intensidade (tom de cinza)
 4. **Limpar prancheta** remove a grade só da prancheta que está ativa no momento
+5. Ao trocar de prancheta no Illustrator (clicando em outra prancheta), o painel detecta a troca em menos de um segundo e carrega os controles com a grade que já existe lá, se houver uma — sem redesenhar nada por conta própria. Numa prancheta sem grade ainda, os controles continuam como estavam, prontos para criar uma ali
 
-Cada prancheta guarda sua própria grade de forma independente: aplicar/ajustar numa prancheta nunca mexe nas grades já aplicadas nas outras, mesmo trocando de prancheta no meio do ajuste.
+Cada prancheta guarda sua própria grade de forma independente: aplicar/ajustar numa prancheta nunca mexe nas grades já aplicadas nas outras, mesmo trocando de prancheta no meio do ajuste. Guias e pontos são mutuamente exclusivos por prancheta — aplicar um tipo de guia remove os pontos daquela prancheta e vice-versa.
 
 ### Por que Guias e Pontos funcionam diferente
 
