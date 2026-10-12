@@ -28,60 +28,58 @@ Painel para o Adobe Illustrator que cria grades de referência na prancheta ativ
 
 ## Instalação
 
-O AutoGrids é uma extensão CEP sem assinatura digital, então o Illustrator precisa ser liberado uma vez para extensões de desenvolvimento. Leva uns 2 minutos.
+<p align="center">
+  <a href="https://github.com/warroma/adobe-illustrator-autogrids/releases/latest/download/AutoGrids-Instalador-Windows.exe"><b>⬇ Baixar para Windows</b></a>
+  &nbsp;·&nbsp;
+  <a href="https://github.com/warroma/adobe-illustrator-autogrids/releases/latest/download/AutoGrids-Instalador-macOS.dmg"><b>⬇ Baixar para macOS</b></a>
+  <br><sub>todas as versões em <a href="https://github.com/warroma/adobe-illustrator-autogrids/releases">Releases</a></sub>
+</p>
 
-**1. Baixe** este repositório (botão verde **Code > Download ZIP**, ou `git clone`).
+1. **Baixe** o instalador do seu sistema (links acima).
+2. **Abra o arquivo.** Como ele não é assinado digitalmente, o sistema avisa na primeira vez:
+   - **Windows** — "O Windows protegeu seu PC": clique em **Mais informações** e depois em **Executar assim mesmo**.
+   - **macOS** — "desenvolvedor não identificado": clique com o botão direito no app, **Abrir**, e confirme em **Abrir**.
 
-**2. Copie a pasta [`com.autogrids.panel`](com.autogrids.panel)** inteira para:
+   Esse aviso aparece para qualquer programa sem assinatura digital — [entenda por que e o que o instalador faz](#perguntas-frequentes).
+3. Clique em **Instalar painel**.
+4. **Feche o Illustrator por completo e abra de novo** — ele só carrega o painel ao abrir.
+5. Abra o painel em **Janela > Extensões > AutoGrids** e, se quiser, arraste a aba dele para a doca lateral.
 
-- **Windows:** `%APPDATA%\Adobe\CEP\extensions\` (cole esse caminho na barra do Explorador de Arquivos)
-- **macOS:** `~/Library/Application Support/Adobe/CEP/extensions/`
+**Para atualizar**, é igual: baixe o instalador da versão nova e clique em **Atualizar painel** — ele reconhece a versão instalada e troca sozinho. Seus documentos e grades não são afetados (os da 1.0.0 são convertidos para o formato novo na primeira vez que o painel os abre).
 
-Se as pastas `CEP` ou `extensions` não existirem, crie-as.
+> O instalador do **Mac ainda não foi testado num Mac de verdade**. Se algo der errado, use a instalação manual abaixo e conte pra gente numa [issue](https://github.com/warroma/adobe-illustrator-autogrids/issues).
 
 <details>
-<summary><b>No Mac: duas pegadinhas desta etapa</b></summary>
+<summary><b>Instalação manual (sem o instalador)</b></summary>
 
-- A pasta `Library` fica oculta no Finder: pressione `Cmd+Shift+G` e cole `~/Library/Application Support/Adobe/CEP/extensions/`.
-- Se baixou como `.zip`, rode no Terminal depois de copiar a pasta (tira a "quarentena" que o macOS põe em arquivos baixados e que faz o painel abrir em branco):
-  ```bash
-  xattr -cr ~/Library/Application\ Support/Adobe/CEP/extensions/com.autogrids.panel
-  ```
+1. Baixe o **Source code (zip)** da [última release](https://github.com/warroma/adobe-illustrator-autogrids/releases/latest) e descompacte.
+2. Copie a pasta `com.autogrids.panel` inteira para:
+   - **Windows:** `%APPDATA%\Adobe\CEP\extensions\` (cole esse caminho na barra do Explorador de Arquivos)
+   - **macOS:** `~/Library/Application Support/Adobe/CEP/extensions/` (no Finder, `Cmd+Shift+G` e cole o caminho — a pasta `Library` fica oculta)
+
+   Se as pastas `CEP` ou `extensions` não existirem, crie-as. Ao atualizar, apague a pasta antiga antes de copiar a nova.
+3. Libere extensões de desenvolvimento (uma vez só):
+   - **Windows** — no PowerShell:
+     ```powershell
+     '7','8','9','10','11','12' | ForEach-Object {
+         $p = "HKCU:\Software\Adobe\CSXS.$_"
+         if (-not (Test-Path $p)) { New-Item -Path $p -Force | Out-Null }
+         New-ItemProperty -Path $p -Name PlayerDebugMode -Value "1" -PropertyType String -Force | Out-Null
+     }
+     ```
+   - **macOS** — no Terminal (o `xattr` tira a "quarentena" que o macOS põe em arquivos baixados e que faz o painel abrir em branco):
+     ```bash
+     for v in 9 10 11 12; do defaults write com.adobe.CSXS.$v PlayerDebugMode 1; done
+     xattr -cr ~/Library/Application\ Support/Adobe/CEP/extensions/com.autogrids.panel
+     ```
+4. Feche o Illustrator por completo, abra de novo e vá em **Janela > Extensões > AutoGrids**.
 </details>
 
-**3. Libere extensões de desenvolvimento** (uma vez só).
+<details>
+<summary><b>Script avulso (sem instalar nada)</b></summary>
 
-Windows — abra o PowerShell e cole:
-
-```powershell
-'7','8','9','10','11','12' | ForEach-Object {
-    $p = "HKCU:\Software\Adobe\CSXS.$_"
-    if (-not (Test-Path $p)) { New-Item -Path $p -Force | Out-Null }
-    New-ItemProperty -Path $p -Name PlayerDebugMode -Value "1" -PropertyType String -Force | Out-Null
-}
-```
-
-macOS — abra o Terminal e cole:
-
-```bash
-for v in 9 10 11 12; do defaults write com.adobe.CSXS.$v PlayerDebugMode 1; done
-```
-
-**4. Feche o Illustrator por completo e abra de novo.** Fechar só o painel ou o documento não basta — o Illustrator só carrega extensões ao abrir.
-
-**5. Abra o painel** em **Janela > Extensões > AutoGrids** e arraste a aba dele para a doca lateral se quiser deixá-lo fixo.
-
-### Atualizar para uma versão nova
-
-1. Apague a pasta `com.autogrids.panel` antiga e copie a nova no lugar (não copie por cima — sobrariam arquivos que a versão nova não usa mais).
-2. **Feche o Illustrator por completo e abra de novo.** O passo 3 da instalação não precisa ser repetido.
-
-Seus documentos e grades não são afetados. Documentos com grades da versão 1.0.0 são convertidos sozinhos para o formato novo na primeira vez que o painel os abre.
-
-### Outras formas
-
-- **Script avulso, sem instalar nada:** abra o [`AutoGrids.jsx`](AutoGrids.jsx) em **Arquivo > Scripts > Outro Script...**. É uma janela simples, sem doca, só com grade retangular e isométrica.
-- **Instalador com janela (em construção):** [`installer/`](installer) faz os passos 2 a 4 sozinho, detecta se é instalação, atualização ou reinstalação e avisa se o Illustrator está aberto. A lógica tem testes automatizados, mas o instalador ainda não foi empacotado nem aberto como aplicativo — por enquanto, use a instalação manual acima.
+Abra o [`AutoGrids.jsx`](AutoGrids.jsx) em **Arquivo > Scripts > Outro Script...**. É uma janela simples, sem doca, só com grade retangular e isométrica.
+</details>
 
 ## Como usar
 
@@ -115,6 +113,38 @@ O peso não está no cálculo (aritmética simples), e sim em quantos objetos o 
 - **Grades pesadas** (ex.: pontos de 5 mm numa A4, ~2.600 círculos) aplicam uma vez só, ao soltar o controle — o painel avisa.
 - **Grades densas demais** (ex.: pontos de 3 mm numa A4, ~7.000 círculos) não são aplicadas: aparece uma mensagem pedindo uma célula maior.
 
+## Perguntas frequentes
+
+<details>
+<summary><b>Apareceu um aviso dizendo que o instalador pode ser perigoso. É seguro?</b></summary>
+
+O Windows e o macOS mostram esse aviso para **qualquer** programa que não tem **assinatura digital** — um certificado pago que identifica quem publicou o programa. O AutoGrids é um projeto gratuito e de código aberto, e por isso não tem essa assinatura. O aviso não significa que algo errado foi encontrado nele.
+
+O instalador faz só o que está descrito na próxima pergunta: não acessa a internet, não coleta dados, não instala mais nada e não precisa de permissão de administrador. O painel em si é um conjunto de scripts (HTML e JavaScript) que roda dentro do Illustrator, e todo o código está neste repositório para quem quiser conferir.
+</details>
+
+<details>
+<summary><b>O que exatamente o instalador muda no meu computador?</b></summary>
+
+1. Copia a pasta do painel (`com.autogrids.panel`) para a pasta onde o Illustrator procura painéis extras: `%APPDATA%\Adobe\CEP\extensions` no Windows, `~/Library/Application Support/Adobe/CEP/extensions` no Mac.
+2. Liga o "modo de desenvolvimento" do Illustrator (explicado abaixo) — uma configuração que vale só para o seu usuário. No Windows, é o valor `PlayerDebugMode` nas chaves `HKEY_CURRENT_USER\Software\Adobe\CSXS.7` a `CSXS.12`.
+3. No Mac, tira da pasta copiada a marca de "baixado da internet", que impediria o painel de abrir.
+
+Nada além disso.
+</details>
+
+<details>
+<summary><b>O que é CEP e esse "modo de desenvolvimento"?</b></summary>
+
+CEP é o sistema que a Adobe usa para os painéis extras do Illustrator — o painel Bibliotecas, por exemplo, é feito com ele. Normalmente o Illustrator só carrega painéis com assinatura digital; o "modo de desenvolvimento" é uma chave do próprio Illustrator que permite carregar painéis sem assinatura, como o AutoGrids. Ela não muda nada no resto do Illustrator, mas vale para qualquer painel sem assinatura — então, como sempre, só instale painéis de quem você confia.
+</details>
+
+<details>
+<summary><b>Como desinstalar?</b></summary>
+
+Apague a pasta `com.autogrids.panel` de dentro da pasta de extensões citada acima e reinicie o Illustrator.
+</details>
+
 ## Problemas conhecidos
 
 - **Pontos que não aparecem na tela:** no Illustrator 2026, objetos criados por extensões CEP às vezes não são redesenhados na hora (as guias não têm esse problema). Os pontos estão lá — o grupo da prancheta na camada AutoGrids mostra a contagem. Redimensionar a janela do Illustrator força o redesenho.
@@ -141,3 +171,4 @@ docs/img/              imagens deste README
   O instalador reconhece esse atalho e não mexe nele.
 - O `host.jsx` pode ser testado fora do painel, pela ponte COM do Illustrator no Windows (`New-Object -ComObject Illustrator.Application` → `DoJavaScript('$.evalFile(...)')`), chamando `AutoGrids_apply` e companhia direto.
 - A versão do painel fica em `ExtensionBundleVersion` no [`CSXS/manifest.xml`](com.autogrids.panel/CSXS/manifest.xml) — é ela que o instalador compara para decidir entre instalar, atualizar ou reinstalar.
+- **Publicar uma versão:** suba a versão no manifest e no `installer/package.json`, escreva as notas em `docs/release-notes/vX.Y.Z.md` e empurre a tag (`git tag vX.Y.Z` e `git push origin vX.Y.Z`). O workflow [`release.yml`](.github/workflows/release.yml) monta o `.exe` (Windows) e o `.dmg` (macOS), roda os testes e publica a release com esses arquivos — os links de download do README apontam sempre para a última.
