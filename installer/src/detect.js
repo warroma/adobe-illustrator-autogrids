@@ -138,7 +138,8 @@ function compareVersions(a, b) {
 
 // O que já existe no destino. "isLink" = a pasta é um atalho (symlink no Mac,
 // junction no Windows) — é como se trabalha no próprio repositório: o
-// Illustrator lê direto dos arquivos-fonte, então não há nada para copiar.
+// Illustrator lê direto dos arquivos-fonte. Instalar troca o atalho por uma
+// cópia sem alterar esses arquivos (ver install.installPanel).
 function inspectInstalled(dest, fsImpl) {
     fsImpl = fsImpl || fs;
     var info = { exists: false, isLink: false, linkTarget: null, version: null };
@@ -162,7 +163,8 @@ function inspectInstalled(dest, fsImpl) {
 //   update    — instalada uma versão mais antiga (ou sem versão legível)
 //   reinstall — a mesma versão já está instalada
 //   downgrade — a instalada é MAIS NOVA que a deste instalador
-//   linked    — a pasta é um atalho para o código-fonte (modo desenvolvimento)
+//   linked    — a pasta é um atalho para o código-fonte; instalar troca o
+//               atalho pela cópia desta versão
 function planInstall(installed, bundledVersion) {
     if (!installed.exists) return "install";
     if (installed.isLink) return "linked";

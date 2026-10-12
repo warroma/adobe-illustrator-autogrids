@@ -2,7 +2,7 @@
 
 Painel para o Adobe Illustrator que cria grades de referência na prancheta ativa — quadriculado, isométrico, pautado, hexagonal e pontilhado — ajustando ao vivo enquanto você arrasta os controles. Cada prancheta tem a sua própria grade.
 
-> **Versão 1.1.0 — em validação.** Esta versão é para testar o uso no dia a dia; a interface do painel e do instalador vai ser redesenhada em breve. Encontrou algo estranho? Abra uma [issue](https://github.com/warroma/adobe-illustrator-autogrids/issues).
+> **Versão 1.1.1 — em validação.** Esta versão é para testar o uso no dia a dia; a interface do painel e do instalador vai ser redesenhada em breve. Encontrou algo estranho? Abra uma [issue](https://github.com/warroma/adobe-illustrator-autogrids/issues).
 
 ![Três pranchetas com grades diferentes: quadriculado com gutter, pontilhado e colmeia hexagonal](docs/img/visao-geral.png)
 
@@ -168,7 +168,7 @@ docs/img/              imagens deste README
   ```powershell
   New-Item -ItemType Junction -Path "$env:APPDATA\Adobe\CEP\extensions\com.autogrids.panel" -Target "<clone>\com.autogrids.panel"
   ```
-  O instalador reconhece esse atalho e não mexe nele.
+  Rodar o instalador troca esse atalho por uma cópia da versão dele (o clone não é alterado); para voltar a trabalhar direto no clone, crie o atalho de novo.
 - O `host.jsx` pode ser testado fora do painel, pela ponte COM do Illustrator no Windows (`New-Object -ComObject Illustrator.Application` → `DoJavaScript('$.evalFile(...)')`), chamando `AutoGrids_apply` e companhia direto.
 - A versão do painel fica em `ExtensionBundleVersion` no [`CSXS/manifest.xml`](com.autogrids.panel/CSXS/manifest.xml) — é ela que o instalador compara para decidir entre instalar, atualizar ou reinstalar.
 - **Publicar uma versão:** suba a versão no manifest e no `installer/package.json`, escreva as notas em `docs/release-notes/vX.Y.Z.md` e empurre a tag (`git tag vX.Y.Z` e `git push origin vX.Y.Z`). O workflow [`release.yml`](.github/workflows/release.yml) monta o `.exe` (Windows) e o `.dmg` (macOS), roda os testes e publica a release com esses arquivos — os links de download do README apontam sempre para a última.

@@ -59,14 +59,14 @@ Para publicar, não é preciso gerar nada à mão: empurrar uma tag `vX.Y.Z` dis
    | Versão instalada mais antiga | **Atualizar** (mostra "1.0.0 → 1.1.0") |
    | Mesma versão | **Reinstalar** |
    | Versão instalada mais nova | **Voltar para a versão X** (pede confirmação) |
-   | A pasta instalada é um atalho (symlink/junction) para o código-fonte | **Modo desenvolvimento**: não copia nada, só confere o modo de depuração |
+   | A pasta instalada é um atalho (symlink/junction) para o código-fonte | **Instalar**: troca o atalho por uma cópia desta versão — só o atalho é removido, os arquivos-fonte não mudam |
 
    Também verifica se o Illustrator está aberto (`tasklist` / `pgrep`) e avisa antes de instalar.
 3. Coloca a pasta `com.autogrids.panel` (a mesma da raiz do repositório, empacotada dentro do instalador) em:
    - Mac: `~/Library/Application Support/Adobe/CEP/extensions/`
    - Windows: `%APPDATA%\Adobe\CEP\extensions\`
 
-   Numa atualização a pasta inteira é trocada, não copiada por cima — assim não sobram arquivos que a versão nova não tem mais. A versão nova é montada ao lado (`com.autogrids.panel.novo`) e só então troca de lugar com a antiga; se a troca falhar (ex.: arquivo preso pelo Illustrator aberto), a versão anterior volta para o lugar.
+   Numa atualização a pasta inteira é trocada, não copiada por cima — assim não sobram arquivos que a versão nova não tem mais. A versão nova é montada ao lado (`com.autogrids.panel.novo`) e só então troca de lugar com a antiga; se a troca falhar (ex.: arquivo preso pelo Illustrator aberto), a versão anterior volta para o lugar. Se a pasta antiga era um atalho para o código-fonte, é o atalho que sai do lugar e é apagado (nunca o conteúdo para onde ele aponta); se a troca falhar, o atalho volta.
 4. Habilita `PlayerDebugMode` para `CSXS.7` até `CSXS.12` (via `defaults write` no Mac, `reg add` no Windows) — o mesmo intervalo de versões do passo manual no README principal.
 5. No fim, **sempre** pede para fechar o Illustrator por completo e abrir de novo — ele só carrega uma extensão CEP nova ou atualizada ao abrir. Se o Illustrator ainda estiver aberto nesse momento, o aviso fica mais direto ("até lá ele continua usando a versão anterior").
 

@@ -1,6 +1,6 @@
 {
   "name": "autogrids-installer",
-  "version": "1.1.0",
+  "version": "1.1.1",
   "private": true,
   "description": "Instalador do painel AutoGrids para Adobe Illustrator (Windows/macOS)",
   "main": "src/main.js",

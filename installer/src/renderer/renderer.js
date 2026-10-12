@@ -29,9 +29,10 @@ function describePlan(r) {
             return { text: "A versão instalada (" + installed + ") é mais nova que a deste instalador (" + bundled + "). Continuar volta para a " + bundled + ".", button: "Voltar para a versão " + bundled };
         case "linked":
             return {
-                text: "Modo desenvolvimento: a pasta do painel é um atalho para " + ((r.installed && r.installed.linkTarget) || "o código-fonte") +
-                    ". Nada será copiado — o Illustrator já lê direto de lá; só o modo de desenvolvimento do CEP será conferido.",
-                button: "Conferir modo de desenvolvimento"
+                text: "A pasta do painel hoje é um atalho para " + ((r.installed && r.installed.linkTarget) || "o código-fonte") +
+                    " (usado para desenvolver o painel). Instalar troca o atalho por uma cópia da versão " + bundled +
+                    " — os arquivos de lá não são alterados.",
+                button: "Instalar painel"
             };
         default:
             return { text: "O painel ainda não está instalado. Versão " + bundled + ".", button: "Instalar painel" };
@@ -39,7 +40,7 @@ function describePlan(r) {
 }
 
 function successTitle(result, mode) {
-    if (result.linked) return "Modo de desenvolvimento conferido.";
+    if (result.replacedLink) return "Versão " + result.version + " instalada no lugar do atalho para o código-fonte.";
     if (mode === "update") return "Atualizado de " + (result.previousVersion || "versão anterior") + " para " + result.version + ".";
     if (mode === "reinstall") return "Versão " + result.version + " reinstalada.";
     return "Versão " + result.version + " instalada.";

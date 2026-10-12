@@ -37,6 +37,29 @@ function enableDebugMode(platform, log, runner) {
     return results;
 }
 
+// Apaga o que estiver em p, se existir. Um atalho (symlink/junction) sai
+// sozinho, sem tocar no alvo: um rmSync recursivo nele poderia seguir o
+// atalho e apagar os arquivos-fonte para onde ele aponta.
+function removePath(p, fsImpl) {
+    var st;
+    try {
+        st = fsImpl.lstatSync(p);
+    } catch (e) {
+        return;
+    }
+    if (!st.isSymbolicLink()) {
+        fsImpl.rmSync(p, { recursive: true, force: true });
+        return;
+    }
+    try {
+        fsImpl.unlinkSync(p);
+    } catch (errUnlink) {
+        // Windows: conforme a versão do Node, uma junction só sai com rmdir —
+        // que também remove só o atalho, nunca o conteúdo do alvo.
+        fsImpl.rmdirSync(p);
+    }
+}
+
 // Coloca a pasta da extensão (com.autogrids.panel) na pasta de extensões do
 // CEP do usuário — serve tanto para instalar quanto para atualizar.
 //
@@ -46,9 +69,10 @@ function enableDebugMode(platform, log, runner) {
 // a troca falhar no meio (arquivo preso pelo Illustrator aberto, por exemplo),
 // a antiga volta para o lugar.
 //
-// Se o destino é um atalho (symlink/junction para o código-fonte — modo
-// desenvolvimento), NÃO mexe em nada: apagar ou copiar "dentro" dele
-// alteraria os arquivos-fonte.
+// Se o destino é um atalho (symlink/junction para o código-fonte, usado para
+// desenvolver o painel), o atalho é trocado pela cópia do mesmo jeito: renomear
+// move só o atalho, e ele é apagado com removePath — os arquivos-fonte para
+// onde ele aponta nunca são alterados.
 //
 // fsImpl é injetável só para teste.
 function installPanel(panelSourceDir, platform, env, log, fsImpl) {
@@ -58,21 +82,20 @@ function installPanel(panelSourceDir, platform, env, log, fsImpl) {
     var dest = path.join(destRoot, path.basename(panelSourceDir));
     var installed = inspectInstalled(dest, fsImpl);
 
-    if (installed.isLink) {
-        if (log) log("A pasta do painel é um atalho para " + (installed.linkTarget || "outro lugar") + " (modo desenvolvimento) — nada copiado.");
-        return { dest: dest, linked: true, previousVersion: installed.version };
-    }
-
     var staging = dest + ".novo";
     var backup = dest + ".antigo";
-    fsImpl.rmSync(staging, { recursive: true, force: true });
-    fsImpl.rmSync(backup, { recursive: true, force: true });
+    removePath(staging, fsImpl);
+    removePath(backup, fsImpl);
 
     if (log) log("Copiando " + panelSourceDir + " -> " + staging);
     fsImpl.cpSync(panelSourceDir, staging, { recursive: true });
 
     if (installed.exists) {
-        if (log) log("Substituindo a versão instalada (" + (installed.version || "versão desconhecida") + ")");
+        if (installed.isLink) {
+            if (log) log("Trocando o atalho para " + (installed.linkTarget || "o código-fonte") + " pela cópia instalada (os arquivos de lá não são alterados)");
+        } else {
+            if (log) log("Substituindo a versão instalada (" + (installed.version || "versão desconhecida") + ")");
+        }
         try {
             fsImpl.renameSync(dest, backup);
         } catch (errMove) {
@@ -86,12 +109,12 @@ function installPanel(panelSourceDir, platform, env, log, fsImpl) {
             fsImpl.rmSync(staging, { recursive: true, force: true });
             throw errSwap;
         }
-        fsImpl.rmSync(backup, { recursive: true, force: true });
+        removePath(backup, fsImpl);
     } else {
         fsImpl.renameSync(staging, dest);
     }
     if (log) log("Painel em " + dest);
-    return { dest: dest, linked: false, previousVersion: installed.version };
+    return { dest: dest, replacedLink: installed.isLink, previousVersion: installed.version };
 }
 
 // macOS: o que vem de um download (o .dmg do instalador) carrega o atributo de
