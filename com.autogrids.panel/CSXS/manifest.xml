@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<ExtensionManifest Version="7.0" ExtensionBundleId="com.autogrids.panel" ExtensionBundleVersion="1.0.0"
+<ExtensionManifest Version="7.0" ExtensionBundleId="com.autogrids.panel" ExtensionBundleVersion="1.1.0"
     ExtensionBundleName="AutoGrids" xmlns:ExtensionList="http://ns.adobe.com/extension-list/1.0">
     <ExtensionList>
-        <Extension Id="com.autogrids.panel.main" Version="1.0.0" />
+        <Extension Id="com.autogrids.panel.main" Version="1.1.0" />
     </ExtensionList>
     <ExecutionEnvironment>
         <HostList>
@@ -42,7 +42,15 @@
                             <Width>500</Width>
                         </MaxSize>
                     </Geometry>
-                    <Icons />
+                    <!-- Ícone do painel recolhido no dock. PNG 23x23 + @2X (46x46),
+                         desenhados no Figma (página "Ícone do painel"). Normal/RollOver
+                         = temas claros da UI; Dark* = temas escuros. -->
+                    <Icons>
+                        <Icon Type="Normal">./icons/icon-normal.png</Icon>
+                        <Icon Type="RollOver">./icons/icon-rollover.png</Icon>
+                        <Icon Type="DarkNormal">./icons/icon-dark-normal.png</Icon>
+                        <Icon Type="DarkRollOver">./icons/icon-dark-rollover.png</Icon>
+                    </Icons>
                 </UI>
             </DispatchInfo>
         </Extension>
