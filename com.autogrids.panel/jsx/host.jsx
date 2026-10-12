@@ -85,11 +85,16 @@ function tagFor(artboardIndex) {
     return TAG_PREFIX + artboardIndex;
 }
 
+function metaNameFor(tag) {
+    return tag + ":meta";
+}
+
 function clearArtboardTagged(layer, artboardIndex) {
     var tag = tagFor(artboardIndex);
+    var metaName = metaNameFor(tag);
     for (var i = layer.pageItems.length - 1; i >= 0; i--) {
         var item = layer.pageItems[i];
-        if (item.name === tag) item.remove();
+        if (item.name === tag || item.name === metaName) item.remove();
     }
 }
 
@@ -138,6 +143,41 @@ function buildLineFamily(layer, tag, b, angleDeg, spacing) {
         var seg = clipLineToRect(px, py, dx, dy, b);
         if (seg) addGuideLine(layer, tag, seg.x1, seg.y1, seg.x2, seg.y2);
     }
+}
+
+// Grava os parâmetros usados para gerar a grade desta prancheta num marcador
+// invisível (guia degenerada) com .note — é como o painel recupera "o que já
+// existe aqui" ao trocar de prancheta, já que a geometria por si só não diz
+// com quais parâmetros foi gerada. Vive na mesma camada que recebeu a grade.
+function writeMeta(layer, tag, b, type, cellSize, margin, dotSize, opacityPct, grayPct) {
+    var marker = layer.pathItems.add();
+    marker.setEntirePath([[b.left, b.bottom], [b.left + 0.001, b.bottom]]);
+    marker.stroked = false;
+    marker.filled = false;
+    marker.guides = true;
+    marker.name = metaNameFor(tag);
+    // "," aqui, não "|": a string desta nota vai inteira como o último campo
+    // da resposta de AutoGrids_getArtboardState, que já usa "|" como
+    // separador entre SEUS campos — reaproveitar "|" aqui faria o split no
+    // painel misturar os campos externos com os internos da nota.
+    marker.note = [type, cellSize, margin, dotSize, opacityPct, grayPct].join(",");
+}
+
+// Procura o marcador de metadados da prancheta (em qualquer uma das duas
+// camadas do AutoGrids) e devolve sua .note, ou "" se a prancheta ainda não
+// tem grade nenhuma.
+function findMeta(doc, tag) {
+    var metaName = metaNameFor(tag);
+    var layerNames = [GUIDE_LAYER_NAME, DOTS_LAYER_NAME];
+    for (var li = 0; li < layerNames.length; li++) {
+        try {
+            var layer = doc.layers.getByName(layerNames[li]);
+            for (var i = 0; i < layer.pageItems.length; i++) {
+                if (layer.pageItems[i].name === metaName) return layer.pageItems[i].note || "";
+            }
+        } catch (e) { /* essa camada ainda não existe */ }
+    }
+    return "";
 }
 
 function buildIsometricGuides(layer, tag, b, spacing) {
@@ -245,15 +285,23 @@ function AutoGrids_ping() {
     }
 }
 
-// Retorna "hasDoc|widthPt|heightPt" para o painel sincronizar o estado inicial.
-function AutoGrids_getState() {
+// Retorna "1|artboardIndex|widthPt|heightPt|meta" (ou "0" sem documento) para
+// o painel saber qual prancheta está ativa agora e, se ela já tiver uma grade
+// do AutoGrids, recarregar os controles com os parâmetros usados nela — "meta"
+// é a string gravada por writeMeta, ou "" se a prancheta ainda não tem grade.
+// Chamado tanto na abertura do painel quanto em polling (não existe evento de
+// troca de prancheta no CEP do Illustrator, só documentAfterActivate/
+// documentAfterDeactivate/applicationActivate, que não disparam para isso).
+function AutoGrids_getArtboardState() {
     try {
-        if (app.documents.length === 0) return "0|0|0";
+        if (app.documents.length === 0) return "0";
         var doc = app.activeDocument;
-        var b = getArtboardBounds(doc, doc.artboards.getActiveArtboardIndex());
-        return "1|" + (b.right - b.left) + "|" + (b.top - b.bottom);
+        var artboardIndex = doc.artboards.getActiveArtboardIndex();
+        var b = getArtboardBounds(doc, artboardIndex);
+        var meta = findMeta(doc, tagFor(artboardIndex));
+        return "1|" + artboardIndex + "|" + (b.right - b.left) + "|" + (b.top - b.bottom) + "|" + meta;
     } catch (err) {
-        return "0|0|0";
+        return "0";
     }
 }
 
@@ -272,20 +320,28 @@ function AutoGrids_apply(type, cellSize, margin, dotSize, opacityPct, grayPct) {
         if (!boundsValid(b)) return "ERRO: A margem é maior que a prancheta ativa.";
         if (!(cellSize > 0)) return "ERRO: Tamanho de célula inválido.";
 
+        // Guias e pontos são mutuamente exclusivos por prancheta: aplicar um tipo
+        // sempre limpa o outro nessa mesma prancheta. Sem isso os dois poderiam
+        // coexistir e o metadado (findMeta) não teria como saber qual dos dois
+        // refletir ao trocar de prancheta.
         if (DOT_TYPES[type]) {
             var dotsLayer = getOrCreateLayer(doc, DOTS_LAYER_NAME);
             clearArtboardTagged(dotsLayer, artboardIndex);
+            try { clearArtboardTagged(doc.layers.getByName(GUIDE_LAYER_NAME), artboardIndex); } catch (eg) { /* sem camada de guias ainda */ }
             if (type === "four-dots") buildSquareDots(dotsLayer, tag, b, cellSize, dotSize, opacityPct, grayPct);
             else buildTriangularDots(dotsLayer, tag, b, cellSize, dotSize, opacityPct, grayPct);
+            writeMeta(dotsLayer, tag, b, type, cellSize, margin, dotSize, opacityPct, grayPct);
             dotsLayer.locked = false;
         } else {
             var guideLayer = getOrCreateLayer(doc, GUIDE_LAYER_NAME);
             clearArtboardTagged(guideLayer, artboardIndex);
+            try { clearArtboardTagged(doc.layers.getByName(DOTS_LAYER_NAME), artboardIndex); } catch (ed) { /* sem camada de pontos ainda */ }
             if (type === "rectangle") buildRectangularGuides(guideLayer, tag, b, cellSize);
             else if (type === "triangle") buildIsometricGuides(guideLayer, tag, b, cellSize);
             else if (type === "lines") buildRuledGuides(guideLayer, tag, b, cellSize);
             else if (type === "hexagon") buildHexGuides(guideLayer, tag, b, cellSize);
             else return "ERRO: tipo de grade desconhecido: " + type;
+            writeMeta(guideLayer, tag, b, type, cellSize, margin, dotSize, opacityPct, grayPct);
             guideLayer.locked = true;
         }
         app.redraw();

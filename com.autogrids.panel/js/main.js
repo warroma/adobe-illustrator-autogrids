@@ -103,6 +103,54 @@ function clearDotsOnly() {
     csInterface.evalScript("AutoGrids_clearDotsOnly()", function () {});
 }
 
+// Carrega no painel os parâmetros de uma grade que já existe na prancheta
+// (vindos de AutoGrids_getArtboardState, formato "type,cellSizePt,marginPt,
+// dotSizePt,opacityPct,grayPct") sem reaplicar nada — é só reflexo do que já
+// está lá, pra trocar de prancheta não arriscar sobrescrever com os valores
+// que estavam ajustados na prancheta anterior.
+function applyLoadedState(metaStr) {
+    var fields = metaStr.split(",");
+    if (fields.length < 6) return;
+    var type = fields[0];
+
+    state.type = type;
+    state.cellSizePt = parseFloat(fields[1]);
+    state.marginPt = parseFloat(fields[2]);
+    state.dotSizePt = parseFloat(fields[3]);
+    state.intensity = parseInt(fields[4], 10);
+    state.section = DOT_TYPES[type] ? "pontos" : "guias";
+
+    Array.prototype.forEach.call(els.sectionTabs.children, function (b) {
+        b.classList.toggle("active", b.getAttribute("data-section") === state.section);
+    });
+    var destGrid = state.section === "pontos" ? els.typeGridPontos : els.typeGridGuias;
+    Array.prototype.forEach.call(destGrid.children, function (b) {
+        b.classList.toggle("active", b.getAttribute("data-type") === type);
+    });
+
+    syncReadouts();
+}
+
+// O CEP do Illustrator não dispara nenhum evento quando você troca a prancheta
+// ativa (só documentAfterActivate/documentAfterDeactivate/applicationActivate,
+// que reagem a troca de DOCUMENTO) — então a única forma confiável de notar a
+// troca é perguntar de tempos em tempos. Só age quando o índice muda, e nesse
+// caso só CARREGA o que já existe lá (nunca desenha nada por conta própria —
+// quem desenha é sempre uma ação do usuário, via requestApply).
+var lastArtboardIndex = null;
+function pollArtboard() {
+    csInterface.evalScript("AutoGrids_getArtboardState()", function (result) {
+        var parts = (result || "0").split("|");
+        if (parts[0] !== "1") return;
+        var artboardIndex = parts[1];
+        if (artboardIndex === lastArtboardIndex) return;
+        lastArtboardIndex = artboardIndex;
+        var meta = parts[4] || "";
+        if (meta) applyLoadedState(meta);
+    });
+}
+setInterval(pollArtboard, 600);
+
 // ----- seleção de tipo (compartilhada pelas duas grades de cartões) -----
 
 function selectType(btn) {
@@ -211,10 +259,18 @@ els.clearBtn.addEventListener("click", function () {
 // ----- inicialização -----
 
 syncReadouts();
-csInterface.evalScript("AutoGrids_getState()", function (result) {
-    var parts = (result || "0|0|0").split("|");
+csInterface.evalScript("AutoGrids_getArtboardState()", function (result) {
+    var parts = (result || "0").split("|");
     if (parts[0] === "1") {
-        doApply();
+        lastArtboardIndex = parts[1];
+        var meta = parts[4] || "";
+        if (meta) {
+            // Já existe grade nesta prancheta: carrega os parâmetros dela em
+            // vez de desenhar os valores padrão por cima.
+            applyLoadedState(meta);
+        } else {
+            doApply();
+        }
     } else {
         setStatus("Abra um documento no Illustrator para começar.", false);
     }
