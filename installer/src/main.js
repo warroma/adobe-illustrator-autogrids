@@ -44,8 +44,8 @@ function installedPanelDir() {
 }
 
 // Tudo que a tela de verificação precisa para escolher o cenário: instalar,
-// atualizar, reinstalar, voltar versão ou modo desenvolvimento (ver
-// detect.planInstall), além de avisar se o Illustrator está aberto.
+// atualizar, reinstalar, voltar versão ou trocar o atalho para o código-fonte
+// (ver detect.planInstall), além de avisar se o Illustrator está aberto.
 ipcMain.handle("detect-illustrator", function () {
     var result = { ok: true, installs: [], running: null, installed: null, bundledVersion: null, mode: "install" };
     try {
@@ -66,13 +66,13 @@ ipcMain.handle("run-install", function () {
     var pushLog = function (line) { log.push(line); };
     try {
         var placed = install.installPanel(panelSourceDir(), process.platform, process.env, pushLog);
-        if (!placed.linked) install.clearQuarantine(placed.dest, process.platform, pushLog);
+        install.clearQuarantine(placed.dest, process.platform, pushLog);
         var debugResults = install.enableDebugMode(process.platform, pushLog);
         var anyDebugFailed = debugResults.some(function (r) { return !r.ok; });
         return {
             ok: true,
             dest: placed.dest,
-            linked: placed.linked,
+            replacedLink: placed.replacedLink,
             previousVersion: placed.previousVersion,
             version: detect.readPanelVersion(panelSourceDir()),
             // Conferido de novo no fim: o aviso final muda se o Illustrator

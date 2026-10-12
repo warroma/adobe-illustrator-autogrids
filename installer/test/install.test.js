@@ -92,7 +92,7 @@ try {
         var r = install.installPanel(source, "win32", env, function (l) { logLines.push(l); });
         var expected = path.join(env.APPDATA, "Adobe", "CEP", "extensions", "com.autogrids.panel");
         assert.strictEqual(r.dest, expected);
-        assert.strictEqual(r.linked, false);
+        assert.strictEqual(r.replacedLink, false);
         assert.strictEqual(r.previousVersion, null);
         assert.strictEqual(detect.readPanelVersion(r.dest), "1.1.0");
         assert.ok(fs.existsSync(path.join(r.dest, "novo.txt")));
@@ -115,21 +115,64 @@ try {
         console.log("installPanel (update 1.0.0 -> 1.1.0): OK, stale files removed");
     })();
 
-    // dev link: the destination is a junction/symlink to the source code — must not be touched
-    (function () {
-        var env = { APPDATA: path.join(TMP, "linked") };
+    // dev link: the destination is a junction/symlink to the source code — the link is
+    // replaced by a real copy in the same run, and the source folder is left exactly as it was
+    function makeDevLink(name) {
+        var env = { APPDATA: path.join(TMP, name) };
         var extDir = path.join(env.APPDATA, "Adobe", "CEP", "extensions");
         fs.mkdirSync(extDir, { recursive: true });
-        var devSource = writePanel(path.join(TMP, "repo", "com.autogrids.panel"), "1.0.0", "fonte.txt");
+        var devSource = writePanel(path.join(TMP, name + "-repo", "com.autogrids.panel"), "1.0.0", "fonte.txt");
         var dest = path.join(extDir, "com.autogrids.panel");
         fs.symlinkSync(devSource, dest, "junction");
-        var r = install.installPanel(source, "win32", env, null);
-        assert.strictEqual(r.linked, true);
-        assert.ok(fs.lstatSync(dest).isSymbolicLink(), "the link itself must still be there");
+        return { env: env, devSource: devSource, dest: dest };
+    }
+    function assertSourceUntouched(devSource) {
+        assert.deepStrictEqual(fs.readdirSync(devSource).sort(), ["CSXS", "fonte.txt"], "source folder must keep exactly its own files");
         assert.strictEqual(detect.readPanelVersion(devSource), "1.0.0", "source code must not be overwritten");
-        assert.ok(fs.existsSync(path.join(devSource, "fonte.txt")), "source files must not be deleted");
-        assert.ok(!fs.existsSync(path.join(devSource, "novo.txt")), "nothing may be copied into the source");
-        console.log("installPanel (dev link): OK, source folder untouched");
+    }
+
+    (function () {
+        var d = makeDevLink("linked");
+        var r = install.installPanel(source, "win32", d.env, null);
+        assert.strictEqual(r.replacedLink, true);
+        assert.strictEqual(r.previousVersion, "1.0.0");
+        assert.ok(!fs.lstatSync(d.dest).isSymbolicLink(), "the link must be replaced by a real folder");
+        assert.strictEqual(detect.readPanelVersion(d.dest), "1.1.0");
+        assert.ok(fs.existsSync(path.join(d.dest, "novo.txt")));
+        assertSourceUntouched(d.devSource);
+        assert.deepStrictEqual(leftovers(d.dest), [], "no staging/backup left behind");
+        console.log("installPanel (dev link): OK, link replaced by 1.1.0, source folder untouched");
+    })();
+
+    // dev link + failed swap: the link comes back, source still untouched
+    (function () {
+        var d = makeDevLink("linked-failed");
+        var flakyFs = Object.create(fs);
+        flakyFs.renameSync = function (from, to) {
+            if (from === d.dest + ".novo" && to === d.dest) {
+                var e = new Error("EBUSY: resource busy or locked, rename");
+                e.code = "EBUSY";
+                throw e;
+            }
+            return fs.renameSync(from, to);
+        };
+        assert.throws(function () { install.installPanel(source, "win32", d.env, null, flakyFs); }, /EBUSY/);
+        assert.ok(fs.lstatSync(d.dest).isSymbolicLink(), "the link must be restored");
+        assert.strictEqual(fs.realpathSync(d.dest), fs.realpathSync(d.devSource));
+        assertSourceUntouched(d.devSource);
+        assert.deepStrictEqual(leftovers(d.dest), []);
+        console.log("installPanel (dev link, failed swap): OK, link restored");
+    })();
+
+    // a link left behind as ".antigo" by an interrupted run is removed as a link, never followed
+    (function () {
+        var d = makeDevLink("linked-leftover");
+        fs.renameSync(d.dest, d.dest + ".antigo");
+        install.installPanel(source, "win32", d.env, null);
+        assert.strictEqual(detect.readPanelVersion(d.dest), "1.1.0");
+        assertSourceUntouched(d.devSource);
+        assert.deepStrictEqual(leftovers(d.dest), []);
+        console.log("installPanel (leftover link from an interrupted run): OK, source folder untouched");
     })();
 
     // failed swap (e.g. a file held open): the previous version comes back
