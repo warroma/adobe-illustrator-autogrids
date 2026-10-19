@@ -1,6 +1,6 @@
-# Instalador do AutoGrids (e do AutoPhysics)
+# Instalador do AutoGrids
 
-App Electron com uma tela simples: detecta o Illustrator, deixa escolher quais painéis instalar — `com.autogrids.panel` e/ou `com.autophysics.panel` —, copia cada um para a pasta de extensões do CEP e habilita o modo de desenvolvimento do CEP automaticamente — os mesmos passos manuais do README principal, só que num clique.
+App Electron com uma tela simples: detecta o Illustrator, copia `com.autogrids.panel` para a pasta de extensões do CEP e habilita o modo de desenvolvimento do CEP automaticamente — os mesmos passos manuais do README principal, só que num clique.
 
 ## Status: construído aqui, ainda não testado num Mac/Windows real
 
@@ -8,7 +8,7 @@ Este ambiente de desenvolvimento é Linux, sem Illustrator e sem servidor de dis
 
 - `npm install` resolve corretamente (Electron 44.7.0 + electron-builder 26.15.3).
 - Sintaxe de todos os arquivos.
-- A lógica "pura" (detecção do Illustrator, cálculo dos caminhos de destino, montagem dos comandos que habilitam o modo de depuração, instalação de vários painéis) tem testes próprios em `test/`, com comandos reais do sistema (`defaults`/`reg`) e o sistema de arquivos substituídos por versões falsas — então eles verificam a lógica sem precisar de um Mac/Windows de verdade. Rode `npm test` para conferir.
+- A lógica "pura" (detecção do Illustrator, cálculo dos caminhos de destino, montagem dos comandos que habilitam o modo de depuração) tem testes próprios em `test/`, com comandos reais do sistema (`defaults`/`reg`) e o sistema de arquivos substituídos por versões falsas — então eles verificam a lógica sem precisar de um Mac/Windows de verdade. Rode `npm test` para conferir.
 - Atualização: os cenários (instalar, atualizar, reinstalar, voltar versão, pasta ligada ao código-fonte, troca que falha no meio) são testados com pastas reais criadas no temporário do sistema, e a detecção foi conferida num Windows 11 real com o Illustrator 2026 instalado fora de Program Files. A janela em si foi conferida no navegador com respostas simuladas — o Electron ainda não foi aberto de verdade.
 
 O que **não** foi testado e só um Mac/Windows reais confirmam: se o Electron abre a janela normalmente, se os caminhos de detecção (`/Applications`, `%ProgramFiles%\Adobe`) batem com uma instalação real do Illustrator, se `defaults`/`reg.exe` têm permissão para escrever sem elevar privilégios, e se o `.dmg`/instalador `.exe` gerado pelo `electron-builder` realmente abre nessas máquinas.
@@ -51,7 +51,7 @@ Para publicar, não é preciso gerar nada à mão: empurrar uma tag `vX.Y.Z` dis
 ## O que o instalador faz, exatamente
 
 1. Procura o Illustrator: pastas com "Adobe Illustrator" no nome em `/Applications` (Mac) ou `Adobe` dentro de `Program Files`/`Program Files (x86)` (Windows) e, no Windows, também o registro de programas instalados — o Creative Cloud deixa instalar em outra unidade (ex.: `D:\Programas\Adobe\...`), que a varredura de pastas não acha. É só para mostrar o que encontrou; não bloqueia a instalação.
-2. Mostra um cartão para cada painel do catálogo (`src/panels.js`) e, **para cada um**, confere o que já está instalado e escolhe o cenário (versão = `ExtensionBundleVersion` do `CSXS/manifest.xml`):
+2. Confere o que já está instalado e escolhe o cenário (versão = `ExtensionBundleVersion` do `CSXS/manifest.xml`):
 
    | Situação | O que a tela oferece |
    |---|---|
@@ -61,17 +61,13 @@ Para publicar, não é preciso gerar nada à mão: empurrar uma tag `vX.Y.Z` dis
    | Versão instalada mais nova | **Voltar para a versão X** (pede confirmação) |
    | A pasta instalada é um atalho (symlink/junction) para o código-fonte | **Instalar**: troca o atalho por uma cópia desta versão — só o atalho é removido, os arquivos-fonte não mudam |
 
-   Vêm marcados os painéis novos ou com atualização; se todos já estão na mesma versão, os de reinstalar; voltar versão nunca vem marcado. O AutoPhysics vem desmarcado, com um aviso, se o Illustrator mais novo encontrado for anterior ao 2020 (ele não abre antes disso). O botão diz o que vai acontecer ("Atualizar AutoGrids e instalar AutoPhysics").
-
    Também verifica se o Illustrator está aberto (`tasklist` / `pgrep`) e avisa antes de instalar.
-3. Coloca a pasta de cada painel marcado (as mesmas da raiz do repositório, empacotadas dentro do instalador) em:
+3. Coloca a pasta `com.autogrids.panel` (a mesma da raiz do repositório, empacotada dentro do instalador) em:
    - Mac: `~/Library/Application Support/Adobe/CEP/extensions/`
    - Windows: `%APPDATA%\Adobe\CEP\extensions\`
 
-   Cada painel é instalado de forma independente: se um falhar (ex.: arquivo preso pelo Illustrator aberto), os outros seguem, a tela mostra qual falhou e o botão passa a "tentar de novo" só com ele.
-
    Numa atualização a pasta inteira é trocada, não copiada por cima — assim não sobram arquivos que a versão nova não tem mais. A versão nova é montada ao lado (`com.autogrids.panel.novo`) e só então troca de lugar com a antiga; se a troca falhar (ex.: arquivo preso pelo Illustrator aberto), a versão anterior volta para o lugar. Se a pasta antiga era um atalho para o código-fonte, é o atalho que sai do lugar e é apagado (nunca o conteúdo para onde ele aponta); se a troca falhar, o atalho volta.
-4. Habilita `PlayerDebugMode` (uma vez, se ao menos um painel foi instalado) para `CSXS.7` até `CSXS.12` (via `defaults write` no Mac, `reg add` no Windows) — o mesmo intervalo de versões do passo manual no README principal.
+4. Habilita `PlayerDebugMode` para `CSXS.7` até `CSXS.12` (via `defaults write` no Mac, `reg add` no Windows) — o mesmo intervalo de versões do passo manual no README principal.
 5. No fim, **sempre** pede para fechar o Illustrator por completo e abrir de novo — ele só carrega uma extensão CEP nova ou atualizada ao abrir. Se o Illustrator ainda estiver aberto nesse momento, o aviso fica mais direto ("até lá ele continua usando a versão anterior").
 
 As telas de cada cenário (e o fluxo completo) estão desenhadas no arquivo de design do projeto, página "Instalador" — a interface atual é provisória e vai seguir esse redesenho.
@@ -88,11 +84,6 @@ installer/
 │   ├── preload.js    (ponte segura entre main e a janela)
 │   ├── detect.js      (lógica pura: achar instalações do Illustrator)
 │   ├── install.js      (lógica pura: copiar arquivos, habilitar modo de depuração)
-│   ├── panels.js       (catálogo de painéis + instalar vários de uma vez)
 │   └── renderer/       (a janela em si: HTML/CSS/JS comum)
-└── test/                (testes de detect.js/install.js/panels.js, sem precisar do Electron rodando)
+└── test/                (testes de detect.js/install.js, sem precisar do Electron rodando)
 ```
-
-O `npm test` também roda os testes do AutoPhysics (`../test/autophysics/`), já que o instalador empacota esse painel — um motor de física quebrado não chega numa release.
-
-Para incluir **outro painel** no instalador: acrescente a pasta dele em `PANELS` (`src/panels.js`) e em `build.extraResources` (`package.json`) — o `test/panels.test.js` confere que os dois batem e que o id é o `ExtensionBundleId` do manifest.

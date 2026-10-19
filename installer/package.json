@@ -2,12 +2,11 @@
   "name": "autogrids-installer",
   "version": "1.1.1",
   "private": true,
-  "description": "Instalador dos painéis AutoGrids e AutoPhysics para Adobe Illustrator (Windows/macOS)",
+  "description": "Instalador do painel AutoGrids para Adobe Illustrator (Windows/macOS)",
   "main": "src/main.js",
   "scripts": {
     "start": "electron .",
-    "test": "node test/detect.test.js && node test/install.test.js && node test/panels.test.js && npm run test:panels",
-    "test:panels": "node ../test/autophysics/physics.test.js && node ../test/autophysics/gif.test.js && node ../test/autophysics/bridge.test.js",
+    "test": "node test/detect.test.js && node test/install.test.js",
     "dist": "electron-builder --publish never"
   },
   "devDependencies": {
@@ -22,8 +21,7 @@
       "src/**/*"
     ],
     "extraResources": [
-      { "from": "../com.autogrids.panel", "to": "com.autogrids.panel" },
-      { "from": "../com.autophysics.panel", "to": "com.autophysics.panel" }
+      { "from": "../com.autogrids.panel", "to": "com.autogrids.panel" }
     ],
     "mac": {
       "target": [{ "target": "dmg", "arch": ["universal"] }],
