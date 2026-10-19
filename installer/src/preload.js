@@ -7,7 +7,7 @@ contextBridge.exposeInMainWorld("autogridsInstaller", {
     detectIllustrator: function () {
         return ipcRenderer.invoke("detect-illustrator");
     },
-    runInstall: function () {
-        return ipcRenderer.invoke("run-install");
+    runInstall: function (panelIds) {
+        return ipcRenderer.invoke("run-install", panelIds);
     }
 });

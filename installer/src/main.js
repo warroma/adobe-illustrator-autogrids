@@ -5,23 +5,22 @@ var BrowserWindow = require("electron").BrowserWindow;
 var ipcMain = require("electron").ipcMain;
 var path = require("path");
 var detect = require("./detect");
-var install = require("./install");
+var panels = require("./panels");
 
-function panelSourceDir() {
-    // Empacotado (build final via electron-builder): os arquivos do painel
-    // ficam em resources/com.autogrids.panel (ver "extraResources" no
-    // package.json). Em desenvolvimento (rodando este projeto direto do
-    // repositório): usa a pasta real com.autogrids.panel um nível acima.
-    if (app.isPackaged) {
-        return path.join(process.resourcesPath, "com.autogrids.panel");
-    }
-    return path.join(__dirname, "..", "..", "com.autogrids.panel");
+// Pasta que contém as pastas dos painéis (com.autogrids.panel,
+// com.autophysics.panel...). Empacotado (build final via electron-builder):
+// resources/, onde o "extraResources" do package.json coloca cada uma. Em
+// desenvolvimento (rodando este projeto direto do repositório): a raiz do
+// repositório, um nível acima do instalador.
+function panelsRoot() {
+    if (app.isPackaged) return process.resourcesPath;
+    return path.join(__dirname, "..", "..");
 }
 
 function createWindow() {
     var win = new BrowserWindow({
         width: 480,
-        height: 600,
+        height: 680,
         resizable: false,
         webPreferences: {
             preload: path.join(__dirname, "preload.js"),
@@ -39,21 +38,16 @@ app.on("window-all-closed", function () {
     app.quit();
 });
 
-function installedPanelDir() {
-    return path.join(detect.cepExtensionsDir(process.platform, process.env), path.basename(panelSourceDir()));
-}
-
-// Tudo que a tela de verificação precisa para escolher o cenário: instalar,
-// atualizar, reinstalar, voltar versão ou trocar o atalho para o código-fonte
-// (ver detect.planInstall), além de avisar se o Illustrator está aberto.
+// Tudo que a tela de verificação precisa: as instalações do Illustrator, se
+// ele está aberto, e para cada painel o cenário — instalar, atualizar,
+// reinstalar, voltar versão ou trocar o atalho para o código-fonte (ver
+// detect.planInstall).
 ipcMain.handle("detect-illustrator", function () {
-    var result = { ok: true, installs: [], running: null, installed: null, bundledVersion: null, mode: "install" };
+    var result = { ok: true, installs: [], running: null, panels: [] };
     try {
         result.installs = detect.findIllustratorInstalls(process.platform);
         result.running = detect.isIllustratorRunning(process.platform);
-        result.bundledVersion = detect.readPanelVersion(panelSourceDir());
-        result.installed = detect.inspectInstalled(installedPanelDir());
-        result.mode = detect.planInstall(result.installed, result.bundledVersion);
+        result.panels = panels.planPanels(panelsRoot(), detect.cepExtensionsDir(process.platform, process.env));
     } catch (err) {
         result.ok = false;
         result.error = err.message;
@@ -61,27 +55,28 @@ ipcMain.handle("detect-illustrator", function () {
     return result;
 });
 
-ipcMain.handle("run-install", function () {
+// ids = pastas dos painéis marcados na tela (ex.: ["com.autogrids.panel"]).
+ipcMain.handle("run-install", function (event, ids) {
     var log = [];
-    var pushLog = function (line) { log.push(line); };
     try {
-        var placed = install.installPanel(panelSourceDir(), process.platform, process.env, pushLog);
-        install.clearQuarantine(placed.dest, process.platform, pushLog);
-        var debugResults = install.enableDebugMode(process.platform, pushLog);
-        var anyDebugFailed = debugResults.some(function (r) { return !r.ok; });
+        var known = (ids || []).filter(function (id) { return !!panels.findPanel(id); });
+        if (known.length === 0) return { ok: false, error: "Nenhum painel escolhido.", panels: [], log: log };
+        var r = panels.installPanels(known, {
+            sourceRoot: panelsRoot(),
+            platform: process.platform,
+            env: process.env,
+            log: function (line) { log.push(line); }
+        });
         return {
-            ok: true,
-            dest: placed.dest,
-            replacedLink: placed.replacedLink,
-            previousVersion: placed.previousVersion,
-            version: detect.readPanelVersion(panelSourceDir()),
+            ok: r.panels.every(function (p) { return p.ok; }),
+            panels: r.panels,
             // Conferido de novo no fim: o aviso final muda se o Illustrator
             // ainda estiver aberto (ele só carrega a versão nova ao reabrir).
             running: detect.isIllustratorRunning(process.platform),
-            debugPartial: anyDebugFailed,
+            debugPartial: r.debugPartial,
             log: log
         };
     } catch (err) {
-        return { ok: false, error: err.message, log: log };
+        return { ok: false, error: err.message, panels: [], log: log };
     }
 });

@@ -43,11 +43,11 @@ Este repositório também traz o **[AutoPhysics](#autophysics--física-e-animaç
    - **macOS** — "desenvolvedor não identificado": clique com o botão direito no app, **Abrir**, e confirme em **Abrir**.
 
    Esse aviso aparece para qualquer programa sem assinatura digital — [entenda por que e o que o instalador faz](#perguntas-frequentes).
-3. Clique em **Instalar painel**.
+3. **Escolha os painéis** — AutoGrids, [AutoPhysics](#autophysics--física-e-animação-experimental) ou os dois — e clique no botão de instalar.
 4. **Feche o Illustrator por completo e abra de novo** — ele só carrega o painel ao abrir.
-5. Abra o painel em **Janela > Extensões > AutoGrids** e, se quiser, arraste a aba dele para a doca lateral.
+5. Abra o painel em **Janela > Extensões > AutoGrids** (ou **AutoPhysics**) e, se quiser, arraste a aba dele para a doca lateral.
 
-**Para atualizar**, é igual: baixe o instalador da versão nova e clique em **Atualizar painel** — ele reconhece a versão instalada e troca sozinho. Seus documentos e grades não são afetados (os da 1.0.0 são convertidos para o formato novo na primeira vez que o painel os abre).
+**Para atualizar**, é igual: baixe o instalador da versão nova e clique no botão — ele reconhece a versão instalada de cada painel e mostra **Atualizar** quando há versão nova. Seus documentos e grades não são afetados (os da 1.0.0 são convertidos para o formato novo na primeira vez que o painel os abre).
 
 > O instalador do **Mac ainda não foi testado num Mac de verdade**. Se algo der errado, use a instalação manual abaixo e conte pra gente numa [issue](https://github.com/warroma/adobe-illustrator-autogrids/issues).
 
@@ -55,7 +55,7 @@ Este repositório também traz o **[AutoPhysics](#autophysics--física-e-animaç
 <summary><b>Instalação manual (sem o instalador)</b></summary>
 
 1. Baixe o **Source code (zip)** da [última release](https://github.com/warroma/adobe-illustrator-autogrids/releases/latest) e descompacte.
-2. Copie a pasta `com.autogrids.panel` inteira para:
+2. Copie a pasta `com.autogrids.panel` inteira (e/ou `com.autophysics.panel`, para o AutoPhysics) para:
    - **Windows:** `%APPDATA%\Adobe\CEP\extensions\` (cole esse caminho na barra do Explorador de Arquivos)
    - **macOS:** `~/Library/Application Support/Adobe/CEP/extensions/` (no Finder, `Cmd+Shift+G` e cole o caminho — a pasta `Library` fica oculta)
 
@@ -73,8 +73,9 @@ Este repositório também traz o **[AutoPhysics](#autophysics--física-e-animaç
      ```bash
      for v in 9 10 11 12; do defaults write com.adobe.CSXS.$v PlayerDebugMode 1; done
      xattr -cr ~/Library/Application\ Support/Adobe/CEP/extensions/com.autogrids.panel
+     xattr -cr ~/Library/Application\ Support/Adobe/CEP/extensions/com.autophysics.panel   # se copiou o AutoPhysics
      ```
-4. Feche o Illustrator por completo, abra de novo e vá em **Janela > Extensões > AutoGrids**.
+4. Feche o Illustrator por completo, abra de novo e vá em **Janela > Extensões > AutoGrids** (ou **AutoPhysics**).
 </details>
 
 <details>
@@ -122,13 +123,13 @@ O peso não está no cálculo (aritmética simples), e sim em quantos objetos o 
 
 O Windows e o macOS mostram esse aviso para **qualquer** programa que não tem **assinatura digital** — um certificado pago que identifica quem publicou o programa. O AutoGrids é um projeto gratuito e de código aberto, e por isso não tem essa assinatura. O aviso não significa que algo errado foi encontrado nele.
 
-O instalador faz só o que está descrito na próxima pergunta: não acessa a internet, não coleta dados, não instala mais nada e não precisa de permissão de administrador. O painel em si é um conjunto de scripts (HTML e JavaScript) que roda dentro do Illustrator, e todo o código está neste repositório para quem quiser conferir.
+O instalador faz só o que está descrito na próxima pergunta: não acessa a internet, não coleta dados, não instala mais nada e não precisa de permissão de administrador. Os painéis em si são conjuntos de scripts (HTML e JavaScript) que rodam dentro do Illustrator, e todo o código está neste repositório para quem quiser conferir.
 </details>
 
 <details>
 <summary><b>O que exatamente o instalador muda no meu computador?</b></summary>
 
-1. Copia a pasta do painel (`com.autogrids.panel`) para a pasta onde o Illustrator procura painéis extras: `%APPDATA%\Adobe\CEP\extensions` no Windows, `~/Library/Application Support/Adobe/CEP/extensions` no Mac.
+1. Copia a pasta de cada painel escolhido (`com.autogrids.panel`, `com.autophysics.panel`) para a pasta onde o Illustrator procura painéis extras: `%APPDATA%\Adobe\CEP\extensions` no Windows, `~/Library/Application Support/Adobe/CEP/extensions` no Mac.
 2. Liga o "modo de desenvolvimento" do Illustrator (explicado abaixo) — uma configuração que vale só para o seu usuário. No Windows, é o valor `PlayerDebugMode` nas chaves `HKEY_CURRENT_USER\Software\Adobe\CSXS.7` a `CSXS.12`.
 3. No Mac, tira da pasta copiada a marca de "baixado da internet", que impediria o painel de abrir.
 
@@ -144,7 +145,7 @@ CEP é o sistema que a Adobe usa para os painéis extras do Illustrator — o pa
 <details>
 <summary><b>Como desinstalar?</b></summary>
 
-Apague a pasta `com.autogrids.panel` de dentro da pasta de extensões citada acima e reinicie o Illustrator.
+Apague a pasta do painel (`com.autogrids.panel` ou `com.autophysics.panel`) de dentro da pasta de extensões citada acima e reinicie o Illustrator.
 </details>
 
 ## Problemas conhecidos
@@ -160,7 +161,7 @@ Nada roda em tempo real: a simulação é calculada inteira quando você clica e
 
 ### Instalar
 
-Ainda não está no instalador. Copie a pasta [`com.autophysics.panel`](com.autophysics.panel) para a mesma pasta de extensões do AutoGrids (veja **Instalação manual** acima — o passo do "modo de desenvolvimento" vale para os dois painéis e não precisa ser repetido), reinicie o Illustrator e abra **Janela > Extensões > AutoPhysics**. Requer Illustrator 2020 (24.0) ou mais recente.
+Vem no mesmo [instalador](#instalação) do AutoGrids: marque **AutoPhysics** na lista de painéis. Depois de reabrir o Illustrator, abra **Janela > Extensões > AutoPhysics**. Requer Illustrator 2020 (24.0) ou mais recente — o instalador avisa se só encontrar versões mais antigas. Para instalar sem o instalador, copie a pasta [`com.autophysics.panel`](com.autophysics.panel) como na **Instalação manual** acima.
 
 ### Como usar
 
@@ -202,13 +203,13 @@ Os ajustes de cada objeto ficam gravados nele (numa *tag* invisível do Illustra
 ```
 com.autogrids.panel/   o painel (CEP): index.html, css/, js/main.js, jsx/host.jsx (motor ExtendScript), icons/
 com.autophysics.panel/ painel AutoPhysics: js/physics.js (motor), js/gif.js (encoder), js/bridge.js, js/main.js, jsx/host.jsx
-installer/             instalador Electron (lógica testável em src/detect.js e src/install.js; `npm test`)
+installer/             instalador Electron dos dois painéis (lógica testável em src/detect.js, src/install.js e src/panels.js; `npm test`)
 test/autophysics/      testes do AutoPhysics em Node, sem dependências (ver abaixo)
 AutoGrids.jsx          versão script avulso, sem painel
 docs/img/              imagens deste README
 ```
 
-- **Testes do AutoPhysics** (Node 18+, nada para instalar):
+- **Testes do AutoPhysics** (Node 18+, nada para instalar; o `npm test` do instalador também roda estes, já que ele empacota o painel):
   ```bash
   node test/autophysics/physics.test.js   # pilha estável, quique = elasticidade², peso x ar, offset
   node test/autophysics/gif.test.js       # GIF codificado e decodificado de volta, pixel a pixel

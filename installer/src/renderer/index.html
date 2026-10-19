@@ -7,26 +7,27 @@
 </head>
 <body>
     <h1>AutoGrids</h1>
-    <p class="lead">Este instalador coloca o painel AutoGrids dentro do seu Adobe Illustrator. Leva poucos segundos.</p>
+    <p class="lead">Este instalador coloca os painéis AutoGrids e AutoPhysics dentro do seu Adobe Illustrator. Escolha quais quer — leva poucos segundos.</p>
 
     <p id="intro">Procurando o Illustrator nesta máquina...</p>
     <ul id="found"></ul>
 
-    <p id="plan" class="plan"></p>
+    <div id="panels" class="panels"></div>
     <p id="runningWarn" class="callout warn" hidden>
         O Illustrator está aberto. Dá para instalar agora, mas ele só carrega o painel
         novo depois de ser fechado por completo e aberto de novo.
     </p>
 
-    <button id="installBtn" disabled>Instalar painel AutoGrids</button>
+    <button id="installBtn" disabled>Instalar</button>
 
     <div id="done" class="callout done" hidden>
         <strong id="doneTitle">Pronto!</strong>
+        <ul id="doneList"></ul>
         <p id="doneRestart" class="restart">
-            Para o painel funcionar corretamente, <strong>feche o Illustrator por completo
+            Para os painéis funcionarem corretamente, <strong>feche o Illustrator por completo
             (Arquivo &gt; Sair) e abra de novo</strong>.
         </p>
-        <p>Depois, abra em <strong>Janela &gt; Extensões &gt; AutoGrids</strong>.</p>
+        <p>Depois, abra em <strong id="doneMenus">Janela &gt; Extensões</strong>.</p>
     </div>
 
     <h2>Dúvidas comuns</h2>
@@ -36,15 +37,15 @@
         <p>
             O Windows e o macOS mostram esse aviso para qualquer programa que não tem
             <strong>assinatura digital</strong> — um certificado pago que identifica quem
-            publicou o programa. O AutoGrids é um projeto gratuito e de código aberto, e por
-            isso não tem essa assinatura. O aviso não significa que algo errado foi
+            publicou o programa. O AutoGrids e o AutoPhysics são um projeto gratuito e de código
+            aberto, e por isso não têm essa assinatura. O aviso não significa que algo errado foi
             encontrado nele.
         </p>
         <p>
             Este instalador faz só o que está descrito na próxima pergunta: não acessa a
             internet, não coleta dados, não instala mais nada e não precisa de permissão de
-            administrador. O painel em si é um conjunto de scripts (HTML e JavaScript) que
-            roda dentro do Illustrator, e todo o código está aberto em
+            administrador. Os painéis em si são conjuntos de scripts (HTML e JavaScript) que
+            rodam dentro do Illustrator, e todo o código está aberto em
             github.com/warroma/adobe-illustrator-autogrids.
         </p>
     </details>
@@ -52,13 +53,14 @@
     <details>
         <summary>O que exatamente ele muda no meu computador?</summary>
         <ol>
-            <li>Copia a pasta do painel (<code>com.autogrids.panel</code>) para a pasta onde o
-                Illustrator procura painéis extras: <code>%APPDATA%\Adobe\CEP\extensions</code>
+            <li>Copia a pasta de cada painel escolhido (<code>com.autogrids.panel</code>,
+                <code>com.autophysics.panel</code>) para a pasta onde o Illustrator procura
+                painéis extras: <code>%APPDATA%\Adobe\CEP\extensions</code>
                 no Windows, <code>~/Library/Application Support/Adobe/CEP/extensions</code> no Mac.</li>
             <li>Liga o "modo de desenvolvimento" do Illustrator (explicado abaixo), uma
                 configuração que vale só para o seu usuário.</li>
-            <li>No Mac, tira da pasta copiada a marca de "baixado da internet", que impediria o
-                painel de abrir.</li>
+            <li>No Mac, tira das pastas copiadas a marca de "baixado da internet", que impediria os
+                painéis de abrir.</li>
         </ol>
         <p>Nada além disso.</p>
     </details>
@@ -69,7 +71,7 @@
             CEP é o sistema que a Adobe usa para os painéis extras do Illustrator — o painel
             Bibliotecas, por exemplo, é feito com ele. Normalmente o Illustrator só carrega
             painéis com assinatura digital. O "modo de desenvolvimento" é uma chave do próprio
-            Illustrator que permite carregar painéis sem assinatura, como o AutoGrids.
+            Illustrator que permite carregar painéis sem assinatura, como o AutoGrids e o AutoPhysics.
         </p>
         <p>
             Ela não muda nada no resto do Illustrator, mas vale para qualquer painel sem
@@ -80,8 +82,9 @@
     <details>
         <summary>Como desinstalar?</summary>
         <p>
-            Apague a pasta <code>com.autogrids.panel</code> de dentro da pasta de extensões
-            citada acima e reinicie o Illustrator.
+            Apague a pasta do painel (<code>com.autogrids.panel</code> ou
+            <code>com.autophysics.panel</code>) de dentro da pasta de extensões citada acima e
+            reinicie o Illustrator.
         </p>
     </details>
 
