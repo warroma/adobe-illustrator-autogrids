@@ -2,6 +2,8 @@
 
 Painel para o Adobe Illustrator que cria grades de referência na prancheta ativa — quadriculado, isométrico, pautado, hexagonal e pontilhado — ajustando ao vivo enquanto você arrasta os controles. Cada prancheta tem a sua própria grade.
 
+Este repositório também traz o **[AutoPhysics](#autophysics--física-e-animação-experimental)** (experimental): objetos que caem, colidem e se empilham dentro da prancheta, com exportação da queda em GIF.
+
 > **Versão 1.1.1 — em validação.** Esta versão é para testar o uso no dia a dia; a interface do painel e do instalador vai ser redesenhada em breve. Encontrou algo estranho? Abra uma [issue](https://github.com/warroma/adobe-illustrator-autogrids/issues).
 
 ![Três pranchetas com grades diferentes: quadriculado com gutter, pontilhado e colmeia hexagonal](docs/img/visao-geral.png)
@@ -150,19 +152,68 @@ Apague a pasta `com.autogrids.panel` de dentro da pasta de extensões citada aci
 - **Pontos que não aparecem na tela:** no Illustrator 2026, objetos criados por extensões CEP às vezes não são redesenhados na hora (as guias não têm esse problema). Os pontos estão lá — o grupo da prancheta na camada AutoGrids mostra a contagem. Redimensionar a janela do Illustrator força o redesenho.
 - **Ícone genérico logo depois de atualizar:** quem tinha o painel encaixado na versão 1.0.0 (sem ícone) ainda vê o ícone genérico na primeira abertura depois de atualizar — o Illustrator guarda o ícone no espaço de trabalho e só grava o novo ao fechar. Feche e abra mais uma vez.
 
+## AutoPhysics — física e animação (experimental)
+
+Um segundo painel, independente do AutoGrids, que **deixa objetos caírem dentro da prancheta**: eles despencam com gravidade, batem uns nos outros e nas bordas da prancheta, quicam e se acomodam numa pilha. Você aplica o resultado no documento (um passo só de desfazer) e pode **exportar a queda como GIF animado** — uma animação feita a partir da arte do Illustrator.
+
+Nada roda em tempo real: a simulação é calculada inteira quando você clica em **Simular**, e o documento só muda quando você clica em **Aplicar estado final**.
+
+### Instalar
+
+Ainda não está no instalador. Copie a pasta [`com.autophysics.panel`](com.autophysics.panel) para a mesma pasta de extensões do AutoGrids (veja **Instalação manual** acima — o passo do "modo de desenvolvimento" vale para os dois painéis e não precisa ser repetido), reinicie o Illustrator e abra **Janela > Extensões > AutoPhysics**. Requer Illustrator 2020 (24.0) ou mais recente.
+
+### Como usar
+
+1. **Selecione os objetos que vão cair** e clique em **Capturar seleção**. Cada objeto selecionado vira um corpo; um grupo cai como um corpo só. A prancheta onde eles estão vira a "caixa" da simulação — os objetos podem começar acima dela, que caem para dentro.
+2. **Ajuste cada objeto** — clique nele na lista (Ctrl/Cmd e Shift para vários; ele também é selecionado no Illustrator):
+   - **Elasticidade**: quanto ele quica (0% = cai e para; 100% = quica para sempre).
+   - **Peso**: densidade relativa. O mais pesado empurra o mais leve nas colisões e, com resistência do ar, cai mais rápido.
+   - **Offset de colisão**: positivo deixa uma folga em volta do objeto; negativo deixa os objetos se sobreporem.
+3. **Ajuste o mundo** (vale para todos): gravidade (100% = Terra), resistência do ar, atrito, duração máxima e quais bordas da prancheta são paredes (chão, laterais, teto).
+4. **Simular** — a prévia mostra as formas de colisão caindo. Ajuste e simule de novo quantas vezes quiser; o documento não é tocado.
+5. **Aplicar estado final** move os objetos para onde a simulação terminou. `Ctrl+Z` / `Cmd+Z` volta tudo ao início.
+6. **Exportar GIF…** — largura, quadros por segundo, velocidade (câmera lenta), tempo parado no fim, fundo (a arte da prancheta ou branco) e repetição. Funciona antes ou depois de aplicar o estado final.
+
+Os ajustes de cada objeto ficam gravados nele (numa *tag* invisível do Illustrator) ao aplicar, e voltam numa próxima captura.
+
+### Como a física funciona
+
+- O motor (`js/physics.js`) segue o **Box2D** de Erin Catto: colisão entre polígonos convexos e círculos (SAT + recorte de arestas), impulsos sequenciais com *warm starting* e correção de penetração separada da velocidade — é o que deixa uma pilha parada em vez de tremendo. Roda no próprio painel, em passos de 1/200 s; 150 objetos levam menos de 1 segundo.
+- **Restituição** (elasticidade): na batida, a velocidade de volta é a de chegada × elasticidade, então a altura do quique é elasticidade² da queda. Entre dois objetos vale a maior das duas (uma bola elástica quica até num chão "morto").
+- **Massa e gravidade**: no vácuo, objetos pesados e leves caem juntos (Galileu) — a massa só muda as colisões. Por isso existe a **resistência do ar**: um arrasto proporcional ao tamanho e à velocidade faz cada objeto ter a sua velocidade terminal, `g × massa / arrasto`. Com ar, o mais pesado cai mais rápido.
+- **Escala**: a prancheta vale ~2 m (raiz de largura × altura). Com 100% de gravidade, um objeto cai a altura de uma A4 em ~0,6 s, como cairia de 2 m de verdade.
+- **Aplicar no documento**: o Illustrator só gira objetos em torno de pontos fixos (centro dos limites, cantos, origem). O painel gira cada objeto em torno da origem do documento, mede onde o centro de massa foi parar com um caminho-sonda temporário e translada a diferença.
+- **GIF**: o Illustrator exporta um PNG transparente de cada objeto (com a aparência exata: gradientes, efeitos, texto) e outro do fundo. Os quadros são montados no painel, girando e movendo esses PNGs, e codificados num GIF com paleta global de 255 cores e quadros incrementais (só o que mudou de um quadro para o outro).
+
+### Limitações
+
+- A colisão usa a **"casca" convexa** de cada objeto (como um elástico esticado em volta dele). Estrelas, letras e outras formas côncavas colidem pela casca. Círculos são reconhecidos e rolam de verdade.
+- **Texto vivo** colide pela caixa do texto; para colisão pelas letras, converta em contornos.
+- No GIF, a ordem de empilhamento dos objetos segue a da seleção, e a arte que **não** foi simulada fica sempre atrás deles.
+- GIF tem no máximo 256 cores: degradês muito suaves podem ganhar faixas.
+
 ## Requisitos
 
-- Adobe Illustrator 2023 ou mais recente (desenvolvido e testado no Illustrator 2026, Windows)
+- Adobe Illustrator 2023 ou mais recente (desenvolvido e testado no Illustrator 2026, Windows) — o AutoPhysics funciona a partir do Illustrator 2020
 - Windows ou macOS
 
 ## Desenvolvimento
 
 ```
 com.autogrids.panel/   o painel (CEP): index.html, css/, js/main.js, jsx/host.jsx (motor ExtendScript), icons/
+com.autophysics.panel/ painel AutoPhysics: js/physics.js (motor), js/gif.js (encoder), js/bridge.js, js/main.js, jsx/host.jsx
 installer/             instalador Electron (lógica testável em src/detect.js e src/install.js; `npm test`)
+test/autophysics/      testes do AutoPhysics em Node, sem dependências (ver abaixo)
 AutoGrids.jsx          versão script avulso, sem painel
 docs/img/              imagens deste README
 ```
+
+- **Testes do AutoPhysics** (Node 18+, nada para instalar):
+  ```bash
+  node test/autophysics/physics.test.js   # pilha estável, quique = elasticidade², peso x ar, offset
+  node test/autophysics/gif.test.js       # GIF codificado e decodificado de volta, pixel a pixel
+  node test/autophysics/bridge.test.js    # host.jsx real contra um Illustrator falso: captura -> física -> aplicar
+  ```
 
 - Para trabalhar no próprio clone sem reinstalar a cada mudança, troque a pasta instalada por um atalho para o repositório — cada mudança passa a valer ao reabrir o Illustrator. No Windows:
   ```powershell
